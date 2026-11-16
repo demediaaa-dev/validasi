@@ -1,1980 +1,902 @@
 <!DOCTYPE html>
-<html lang="id" class="light">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIP-ASLINMAS | Rekapitulasi Data Satlinmas Kab. Musi Rawas</title>
-    
-    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        linmas: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                            950: '#022c22',
-                        },
-                        gold: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- SheetJS (XLSX) untuk membaca dan ekspor file Excel/CSV -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    
-    <!-- Chart.js untuk Dashboard Visualisasi -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <style>
-        /* Custom Scrollbar untuk Tabel dan UI */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(16, 185, 129, 0.3);
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(16, 185, 129, 0.6);
-        }
-        .glass-card {
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .animate-pulse-soft {
-            animation: pulse-soft 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIP-ASLINMAS | Kabupaten Musi Rawas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .linmas-gradient { background: linear-gradient(135deg, #064e3b 0%, #047857 60%, #065f46 100%); }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
-
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 glass-card border-b border-slate-200 dark:border-slate-800 shadow-sm">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20 gap-4">
-                
-                <!-- Brand & Logo ASLINMAS Kabupaten Musi Rawas (logo.png + fallback SVG) -->
-                <div class="flex items-center gap-3.5 cursor-pointer" onclick="navigateTo('/')">
-                    <div class="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 drop-shadow-md flex items-center justify-center">
-                        <img src="logo.png" alt="Logo ASLINMAS Musi Rawas" class="w-full h-full object-contain rounded-xl" onerror="this.style.display='none'; document.getElementById('nav-logo-fallback').classList.remove('hidden');">
-                        <!-- Fallback SVG jika logo.png belum diletakkan di folder root -->
-                        <svg id="nav-logo-fallback" viewBox="0 0 120 135" fill="none" xmlns="http://www.w3.org/2000/svg" class="hidden w-full h-full">
-                            <defs>
-                                <linearGradient id="shieldGrad" x1="10" y1="5" x2="110" y2="130" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#065f46"/>
-                                    <stop offset="55%" stop-color="#047857"/>
-                                    <stop offset="100%" stop-color="#022c22"/>
-                                </linearGradient>
-                                <linearGradient id="goldBorder" x1="0" y1="0" x2="120" y2="135" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#fde047"/>
-                                    <stop offset="50%" stop-color="#f59e0b"/>
-                                    <stop offset="100%" stop-color="#b45309"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M60 4L112 22V64C112 96.5 89.5 119.5 60 131C30.5 119.5 8 96.5 8 64V22L60 4Z" fill="url(#shieldGrad)" stroke="url(#goldBorder)" stroke-width="5"/>
-                            <polygon points="60,18 63,25 70,25 64.5,29.5 66.5,36.5 60,32 53.5,36.5 55.5,29.5 50,25 57,25" fill="#fbbf24"/>
-                            <path d="M60 40L82 50V68C82 82 72 93 60 99C48 93 38 82 38 68V50L60 40Z" fill="#064e3b" stroke="#fbbf24" stroke-width="2.5"/>
-                            <text x="60" y="65" text-anchor="middle" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="13">LINMAS</text>
-                            <rect x="26" y="101" width="68" height="14" rx="4" fill="#dc2626" stroke="#fbbf24" stroke-width="1.5"/>
-                            <text x="60" y="110.5" text-anchor="middle" fill="#ffffff" font-family="Inter, sans-serif" font-weight="700" font-size="7.5">MUSI RAWAS</text>
-                        </svg>
-                    </div>
-                    
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h1 class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
-                                ASLINMAS <span class="text-linmas-600 dark:text-linmas-400">MUSI RAWAS</span>
-                            </h1>
-                            <span id="mode-badge" class="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-linmas-100 text-linmas-800 dark:bg-linmas-900/60 dark:text-linmas-300 border border-linmas-200 dark:border-linmas-700">
-                                Rekap Publik Lifetime
-                            </span>
-                        </div>
-                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
-                            Sistem Rekapitulasi & Validasi Data Satlinmas Kabupaten Musi Rawas
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Right Controls (Dinamis sesuai Status Login Publik vs Admin) -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <!-- Status Koneksi Spreadsheet -->
-                    <button onclick="toggleModal('spreadsheet-modal', true)" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition" title="Konfigurasi Google Spreadsheet & Vercel">
-                        <span id="sheet-status-dot" class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span class="hidden lg:inline">Database Sheet</span>
-                    </button>
-
-                    <!-- Admin-only Quick Buttons -->
-                    <div id="admin-nav-controls" class="hidden items-center gap-2">
-                        <button onclick="syncFromSpreadsheet()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition" title="Muat ulang data dari Google Spreadsheet">
-                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                            <span class="hidden md:inline">Tarik Data Sheet</span>
-                        </button>
-
-                        <button onclick="downloadTemplateExcel()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition" title="Unduh Template Excel 20 Kolom">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-linmas-600 dark:text-linmas-400"></i>
-                            <span class="hidden xl:inline">Template Excel</span>
-                        </button>
-                    </div>
-
-                    <!-- Public Login Button (Tampil saat belum login) -->
-                    <button id="btn-nav-login" onclick="navigateTo('/login')" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-linmas-600 hover:bg-linmas-700 text-white shadow-sm transition">
-                        <i data-lucide="log-in" class="w-4 h-4"></i>
-                        <span>Login Operator</span>
-                    </button>
-
-                    <!-- User Profile & Logout (Tampil saat sudah login) -->
-                    <div id="btn-nav-user" class="hidden items-center gap-2">
-                        <div class="hidden sm:flex flex-col text-right pr-1">
-                            <span id="nav-user-name" class="text-xs font-bold text-slate-900 dark:text-white leading-tight">Operator</span>
-                            <span id="nav-user-role" class="text-[10px] font-medium text-linmas-600 dark:text-linmas-400">Admin Kabupaten</span>
-                        </div>
-                        <button onclick="handleLogout()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:hover:bg-rose-900/70 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition" title="Keluar Sesi">
-                            <i data-lucide="log-out" class="w-4 h-4"></i>
-                            <span class="hidden sm:inline">Keluar</span>
-                        </button>
-                    </div>
-
-                    <!-- Theme Toggle -->
-                    <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition" aria-label="Ubah Tema">
-                        <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
-                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
-                    </button>
-                </div>
+  <!-- ==================== HALAMAN LOGIN (/login) ==================== -->
+  <div id="loginView" class="hidden min-h-screen flex items-center justify-center p-4 linmas-gradient">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-emerald-700/20">
+      <div class="p-8">
+        <div class="flex flex-col items-center text-center mb-6">
+          <div class="w-20 h-20 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center p-2 mb-3 shadow-sm">
+            <img src="logo.png" alt="Logo ASLINMAS Musi Rawas" class="w-full h-full object-contain"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="display:none;" class="w-full h-full items-center justify-center bg-emerald-700 text-white font-extrabold rounded-xl text-sm">
+              LINMAS
             </div>
+          </div>
+          <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full tracking-wide uppercase mb-2">
+            Portal Operator & Admin
+          </span>
+          <h1 class="text-xl font-extrabold text-slate-900">SIP-ASLINMAS Musi Rawas</h1>
+          <p class="text-xs text-slate-500 mt-1">Masuk menggunakan akun dari database Google Spreadsheet</p>
         </div>
+
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Username</label>
+            <input type="text" id="loginUsername" required placeholder="Masukkan username..."
+                   class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 outline-none text-sm transition">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password</label>
+            <input type="password" id="loginPassword" required placeholder="Masukkan password..."
+                   class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 outline-none text-sm transition">
+          </div>
+
+          <div id="loginError" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium"></div>
+
+          <button type="submit" id="btnLoginSubmit"
+                  class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-700/30 transition text-sm">
+            Masuk ke Dashboard Admin
+          </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+          <button onclick="navigateTo('/')" class="text-emerald-700 hover:underline font-semibold flex items-center gap-1">
+            ← Kembali ke Rekap Publik
+          </button>
+          <span class="text-slate-400">Lan Serasan Sekentenan</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== APLIKASI UTAMA (/ & DASHBOARD) ==================== -->
+  <div id="mainAppView" class="flex-1 flex flex-col">
+    <!-- Navbar -->
+    <header class="linmas-gradient text-white shadow-lg sticky top-0 z-30 border-b border-emerald-600/40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5 cursor-pointer" onclick="navigateTo('/')">
+          <div class="w-12 h-12 rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center shrink-0">
+            <img src="logo.png" alt="Logo ASLINMAS" class="w-full h-full object-contain"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="display:none;" class="w-full h-full items-center justify-center bg-emerald-800 text-amber-400 font-extrabold text-[10px] rounded-lg text-center leading-tight">
+              LINMAS<br>MURA
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">SIP-ASLINMAS</h1>
+              <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-400 text-emerald-950">
+                Musi Rawas
+              </span>
+            </div>
+            <p class="text-xs text-emerald-100/90">Sistem Informasi & Rekapitulasi Satuan Perlindungan Masyarakat</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <!-- Status Koneksi Spreadsheet -->
+          <span id="sheetStatusBadge" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-900/60 border border-emerald-500/30 text-emerald-100">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Mode Lokal
+          </span>
+
+          <!-- Tombol Mode Publik vs Admin -->
+          <div id="publicNavActions" class="flex items-center gap-2">
+            <button onclick="navigateTo('/login')"
+                    class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-emerald-950 font-bold text-xs sm:text-sm rounded-xl shadow transition flex items-center gap-1.5">
+              <span>🔐</span> Login Operator
+            </button>
+          </div>
+
+          <div id="adminNavActions" class="hidden flex items-center gap-2">
+            <div class="hidden md:block text-right mr-1">
+              <div id="adminUserName" class="text-xs font-bold text-white">Admin</div>
+              <div id="adminUserRole" class="text-[10px] text-amber-300">Operator Kabupaten</div>
+            </div>
+            <button onclick="openSheetConfigModal()"
+                    class="px-3 py-2 bg-emerald-800 hover:bg-emerald-900 text-white border border-emerald-500/40 font-semibold text-xs rounded-xl transition">
+              ⚙️ Sheet API
+            </button>
+            <button onclick="logout()"
+                    class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition">
+              Keluar
+            </button>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <!-- ===================================================================== -->
-    <!-- HALAMAN LOGIN (/login) - MUNCUL SAAT RUTE /login AKTIF                -->
-    <!-- ===================================================================== -->
-    <section id="login-view" class="hidden flex-1 flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-100 via-emerald-50/40 to-slate-100 dark:from-slate-950 dark:via-linmas-950/20 dark:to-slate-950">
-        <div class="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div class="p-8 pb-6 text-center border-b border-slate-100 dark:border-slate-800 bg-gradient-to-b from-linmas-50/70 to-transparent dark:from-linmas-950/30">
-                <!-- Logo.png pada halaman login -->
-                <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-white dark:bg-slate-800 p-2 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center">
-                    <img src="logo.png" alt="Logo ASLINMAS Musi Rawas" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').classList.remove('hidden');">
-                    <svg id="login-logo-fallback" viewBox="0 0 120 135" fill="none" xmlns="http://www.w3.org/2000/svg" class="hidden w-14 h-14">
-                        <path d="M60 4L112 22V64C112 96.5 89.5 119.5 60 131C30.5 119.5 8 96.5 8 64V22L60 4Z" fill="#065f46" stroke="#f59e0b" stroke-width="5"/>
-                        <text x="60" y="68" text-anchor="middle" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="14">LINMAS</text>
-                        <text x="60" y="95" text-anchor="middle" fill="#fde047" font-family="Inter, sans-serif" font-weight="700" font-size="9">MUSI RAWAS</text>
-                    </svg>
-                </div>
-                <h2 class="font-display font-extrabold text-xl text-slate-900 dark:text-white">Login Operator ASLINMAS</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kabupaten Musi Rawas &bull; Autentikasi Google Spreadsheet</p>
-            </div>
+    <!-- Main Container -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
 
-            <form onsubmit="handleLoginSubmit(event)" class="p-8 pt-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Username / NIP / Email</label>
-                    <div class="relative">
-                        <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="login-username" required placeholder="Masukkan username terdaftar" class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Kata Sandi</label>
-                    <div class="relative">
-                        <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                    </div>
-                </div>
-
-                <div id="login-error-box" class="hidden p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 font-medium"></div>
-
-                <button type="submit" id="btn-submit-login" class="w-full py-3 px-4 rounded-xl bg-linmas-600 hover:bg-linmas-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                    <span>Masuk ke Ruang Kerja</span>
-                </button>
-
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                    <button type="button" onclick="demoLogin()" class="w-full py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold transition">
-                        Masuk Mode Simulasi (Tanpa Spreadsheet)
-                    </button>
-                    <div class="flex items-center justify-between text-xs pt-1">
-                        <button type="button" onclick="navigateTo('/')" class="text-slate-500 hover:text-linmas-600 font-medium flex items-center gap-1">
-                            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Kembali ke Rekap Publik
-                        </button>
-                        <button type="button" onclick="toggleModal('spreadsheet-modal', true)" class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
-                            Atur URL Spreadsheet
-                        </button>
-                    </div>
-                </div>
-            </form>
+      <!-- Banner Info Mode -->
+      <div id="publicInfoBanner" class="bg-white border-l-4 border-emerald-600 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-800">📊 Portal Transparansi Data Lifetime ASLINMAS Kabupaten Musi Rawas</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Menampilkan rekapitulasi keanggotaan aktif. Demi perlindungan data pribadi, NIK, No. HP, dan Email disamarkan pada akses publik.</p>
         </div>
-    </section>
+        <button onclick="fetchFromSpreadsheet()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-lg border border-emerald-200 transition">
+          🔄 Muat Ulang Data
+        </button>
+      </div>
 
-    <!-- ===================================================================== -->
-    <!-- MAIN PORTAL & WORKSPACE (PUBLIK LIFETIME + ADMIN WORKSPACE)           -->
-    <!-- ===================================================================== -->
-    <main id="main-app-view" class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <!-- Panel Kerja Khusus Admin / Operator (Upload & Komparasi) -->
+      <section id="adminWorkspace" class="hidden bg-white rounded-2xl shadow-sm border border-emerald-200 p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full uppercase">Area Kerja Operator</span>
+            <h2 class="text-base font-extrabold text-slate-900 mt-1">Upload & Komparasi Data Terbaru Desa vs Data Acuan</h2>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="downloadTemplateExcel()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">
+              📥 Unduh Format Excel (20 Kolom)
+            </button>
+            <button onclick="syncAcuanToSpreadsheet()" id="btnSyncSheet" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow transition">
+              ☁️ Simpan Acuan ke Spreadsheet
+            </button>
+          </div>
+        </div>
 
-        <!-- Banner Rekap Publik Lifetime (Hanya tampil jika belum login) -->
-        <section id="public-hero-banner" class="bg-gradient-to-r from-linmas-900 via-linmas-800 to-emerald-900 text-white rounded-2xl p-5 sm:p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="space-y-1">
-                <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/15 text-amber-300 text-[11px] font-bold uppercase tracking-wider">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Portal Transparansi Publik Lifetime
-                </div>
-                <h2 class="font-display font-extrabold text-lg sm:text-2xl">Rekapitulasi Anggota ASLINMAS Kabupaten Musi Rawas</h2>
-                <p class="text-xs sm:text-sm text-linmas-100/90 max-w-2xl">
-                    Data rekapitulasi personel Satlinmas aktif per Kecamatan dan Desa/Kelurahan dapat diakses secara terbuka. Untuk menjaga privasi, nomor NIK dan HP disamarkan pada tampilan publik.
-                </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Upload Data Acuan -->
+          <div class="p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/70 transition">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800">1. Data Acuan Induk (Master)</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Otomatis dimuat dari Spreadsheet, atau unggah file Excel/CSV master baru.</p>
+              </div>
+              <span id="countAcuanBadge" class="px-2.5 py-1 bg-slate-200 text-slate-800 text-xs font-extrabold rounded-lg">0 Data</span>
             </div>
-            <div class="flex flex-wrap items-center gap-2.5 flex-shrink-0">
-                <button onclick="navigateTo('/login')" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow transition flex items-center gap-2">
-                    <i data-lucide="lock-open" class="w-4 h-4"></i>
-                    <span>Login Admin / Desa</span>
-                </button>
+            <label class="mt-3 inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-xs font-bold text-slate-700 cursor-pointer shadow-sm">
+              <span>📂 Pilih File Data Acuan (.xlsx / .csv)</span>
+              <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event, 'acuan')" class="hidden">
+            </label>
+          </div>
+
+          <!-- Upload Data Terbaru Desa -->
+          <div class="p-4 rounded-xl border-2 border-dashed border-amber-300 hover:border-amber-500 bg-amber-50/40 transition">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800">2. Upload Data Terbaru Desa/Kelurahan</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Sistem otomatis mendeteksi anggota yang <b>belum ada di Data Acuan</b>.</p>
+              </div>
+              <span id="countBaruBadge" class="px-2.5 py-1 bg-amber-200 text-amber-900 text-xs font-extrabold rounded-lg">0 Baru</span>
             </div>
-        </section>
-
-        <!-- Section 1: Panel Upload & Komparasi (KHUSUS USER LOGIN / OPERATOR) -->
-        <section id="admin-upload-section" class="hidden grid-cols-1 lg:grid-cols-12 gap-5">
-            
-            <!-- Card 1: Data Acuan (Master Database dari Spreadsheet / Excel) -->
-            <div class="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200">
-                                <i data-lucide="database" class="w-5 h-5 text-linmas-600"></i>
-                            </div>
-                            <div>
-                                <h2 class="font-display font-bold text-base text-slate-900 dark:text-white">1. Data Acuan (Master Sheet)</h2>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Database induk dari Google Spreadsheet / File Acuan</p>
-                            </div>
-                        </div>
-                        <span id="badge-acuan-count" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                            0 Data
-                        </span>
-                    </div>
-
-                    <label for="file-acuan" class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-linmas-500 dark:hover:border-linmas-500 rounded-xl cursor-pointer bg-slate-50/70 dark:bg-slate-800/40 hover:bg-linmas-50/40 dark:hover:bg-linmas-950/20 transition">
-                        <div class="flex flex-col items-center justify-center pt-4 pb-4 px-4 text-center">
-                            <i data-lucide="upload-cloud" class="w-7 h-7 mb-1.5 text-slate-400 group-hover:text-linmas-600 transition"></i>
-                            <p class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                Klik/seret file <span class="text-linmas-600 dark:text-linmas-400">Excel Acuan</span> atau tarik dari Spreadsheet
-                            </p>
-                            <p id="acuan-filename" class="text-[11px] text-slate-400 mt-1 truncate max-w-xs">Belum ada file diunggah</p>
-                        </div>
-                        <input id="file-acuan" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event, 'acuan')" />
-                    </label>
-                </div>
-
-                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                    <button onclick="syncFromSpreadsheet()" class="text-linmas-600 dark:text-linmas-400 font-semibold hover:underline flex items-center gap-1">
-                        <i data-lucide="cloud-download" class="w-3.5 h-3.5"></i> Muat dari Google Sheet
-                    </button>
-                    <button onclick="clearDataset('acuan')" class="text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium hover:underline">
-                        Reset Acuan
-                    </button>
-                </div>
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <label class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold cursor-pointer shadow-sm">
+                <span>📤 Upload Data Desa (.xlsx / .csv)</span>
+                <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event, 'terbaru')" class="hidden">
+              </label>
+              <button id="btnApproveNew" onclick="approveNewToAcuan()" class="hidden px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm">
+                ✅ Sahkan Semua Data Baru ke Acuan
+              </button>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <!-- Card 2: Upload Data Terbaru Desa/Kelurahan -->
-            <div class="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl p-5 border-2 border-linmas-500/40 dark:border-linmas-500/30 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute top-0 right-0 px-3 py-1 bg-linmas-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-xl">
-                    Input Desa Terbaru
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-3 pr-24">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-linmas-100 dark:bg-linmas-900/50 flex items-center justify-center text-linmas-700 dark:text-linmas-400">
-                                <i data-lucide="file-plus-2" class="w-5 h-5"></i>
-                            </div>
-                            <div>
-                                <h2 class="font-display font-bold text-base text-slate-900 dark:text-white">2. Upload Data Terbaru Desa</h2>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Rekap terbaru desa/kelurahan untuk dicocokkan</p>
-                            </div>
-                        </div>
-                    </div>
+      <!-- KPI Cards -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div class="text-xs font-bold text-slate-400 uppercase">Total Anggota Acuan</div>
+          <div id="kpiTotal" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0</div>
+          <div class="text-xs text-emerald-600 font-semibold mt-1">Tercatat di Database</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div class="text-xs font-bold text-slate-400 uppercase">Status Aktif</div>
+          <div id="kpiAktif" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1">0</div>
+          <div id="kpiAktifPct" class="text-xs text-slate-500 font-medium mt-1">0% dari total</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div class="text-xs font-bold text-slate-400 uppercase">BPJS Ketenagakerjaan</div>
+          <div id="kpiBpjs" class="text-2xl sm:text-3xl font-extrabold text-blue-700 mt-1">0</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Peserta Terlindungi</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div class="text-xs font-bold text-slate-400 uppercase">Cakupan Wilayah</div>
+          <div id="kpiWilayah" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0 Kec / 0 Desa</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Kabupaten Musi Rawas</div>
+        </div>
+      </section>
 
-                    <label for="file-terbaru" class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-linmas-400/70 dark:border-linmas-700 hover:border-linmas-600 rounded-xl cursor-pointer bg-linmas-50/40 dark:bg-linmas-950/20 hover:bg-linmas-50 dark:hover:bg-linmas-900/30 transition">
-                        <div class="flex flex-col items-center justify-center pt-4 pb-4 px-4 text-center">
-                            <i data-lucide="file-up" class="w-7 h-7 mb-1.5 text-linmas-600 dark:text-linmas-400 group-hover:scale-110 transition-transform"></i>
-                            <p class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100">
-                                Unggah File <span class="text-linmas-600 dark:text-linmas-400">Usulan / Update Desa</span>
-                            </p>
-                            <p id="terbaru-filename" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate max-w-xs">Mendukung multi-file atau 1 file rekap desa (.xlsx, .xls, .csv)</p>
-                        </div>
-                        <input id="file-terbaru" type="file" accept=".xlsx,.xls,.csv" multiple class="hidden" onchange="handleFileUpload(event, 'terbaru')" />
-                    </label>
-                </div>
+      <!-- Dashboard Grafik -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 lg:col-span-2">
+          <h3 class="text-sm font-extrabold text-slate-800 mb-3">Sebaran Anggota ASLINMAS per Kecamatan</h3>
+          <div class="h-60">
+            <canvas id="chartKecamatan"></canvas>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
+          <h3 class="text-sm font-extrabold text-slate-800 mb-3">Komposisi Status & Tingkat</h3>
+          <div class="h-60 flex items-center justify-center">
+            <canvas id="chartStatus"></canvas>
+          </div>
+        </div>
+      </section>
 
-                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                    <span id="badge-terbaru-count" class="font-semibold text-linmas-700 dark:text-linmas-400">
-                        0 Baris Diunggah
-                    </span>
-                    <button onclick="clearDataset('terbaru')" class="text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium hover:underline">
-                        Hapus Upload Terbaru
-                    </button>
-                </div>
-            </div>
+      <!-- Tabel Data & Multi-Filter -->
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <!-- Tab Navigasi Dataset -->
+        <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70">
+          <div class="flex flex-wrap gap-2">
+            <button onclick="switchDatasetTab('acuan')" id="tabAcuan"
+                    class="px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow-sm transition">
+              📋 Data Acuan Induk (<span id="tabAcuanCount">0</span>)
+            </button>
+            <button onclick="switchDatasetTab('baru')" id="tabBaru"
+                    class="hidden px-4 py-2 rounded-xl text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:bg-amber-50 transition">
+              ✨ Data Terbaru Belum di Acuan (<span id="tabBaruCount">0</span>)
+            </button>
+          </div>
 
-            <!-- Card 3: Parameter Pencocokan & Simpan ke Google Spreadsheet -->
-            <div class="lg:col-span-2 bg-gradient-to-br from-linmas-900 via-linmas-800 to-slate-900 text-white rounded-2xl p-5 shadow-md flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center gap-2 mb-2">
-                        <i data-lucide="git-compare" class="w-5 h-5 text-amber-400"></i>
-                        <h3 class="font-display font-bold text-sm uppercase tracking-wider text-amber-300">Kunci Komparasi</h3>
-                    </div>
-                    <p class="text-xs text-linmas-100/80 mb-2 leading-relaxed">
-                        Deteksi data baru berdasarkan:
-                    </p>
-                    <select id="compare-key" onchange="runComparison()" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-amber-400">
-                        <option value="NIK" class="text-slate-900">NIK (Nomor Induk Kependudukan)</option>
-                        <option value="Nomor KTA" class="text-slate-900">Nomor KTA Satlinmas</option>
-                        <option value="NIK_OR_NAMA" class="text-slate-900">NIK atau Nama + Kelurahan</option>
-                    </select>
-                </div>
+          <div class="flex items-center gap-2">
+            <button onclick="resetFilters()" class="px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 rounded-xl">
+              Reset Filter
+            </button>
+            <button onclick="exportCurrentTable()" class="px-3.5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-sm">
+              📊 Export Excel (.xlsx)
+            </button>
+          </div>
+        </div>
 
-                <div class="mt-4 space-y-2">
-                    <button onclick="mergeAndPushToSpreadsheet()" id="btn-merge-master" class="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow transition disabled:opacity-40 disabled:cursor-not-allowed">
-                        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
-                        <span>Sahkan & Simpan ke Sheet</span>
-                    </button>
-                </div>
-            </div>
-        </section>
+        <!-- Baris Filter -->
+        <div class="p-4 bg-white border-b border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div class="lg:col-span-2">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pencarian Cepat</label>
+            <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Cari Nama, NIK, No KTA, Alamat..."
+                   class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600 outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Kecamatan</label>
+            <select id="filterKecamatan" onchange="updateKelurahanOptions(); applyFilters();"
+                    class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none">
+              <option value="">Semua Kecamatan</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Kelurahan / Desa</label>
+            <select id="filterKelurahan" onchange="applyFilters()"
+                    class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none">
+              <option value="">Semua Desa/Kel</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+            <select id="filterStatus" onchange="applyFilters()"
+                    class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none">
+              <option value="">Semua Status</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">BPJS Ketenagakerjaan</label>
+            <select id="filterBpjs" onchange="applyFilters()"
+                    class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none">
+              <option value="">Semua BPJS</option>
+            </select>
+          </div>
+        </div>
 
-        <!-- Section 2: KPI Summary Cards (Tampil untuk Publik Lifetime & Admin) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <!-- KPI 1: Total Data Acuan (Lifetime) -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total ASLINMAS Lifetime</span>
-                    <div class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        <i data-lucide="users" class="w-4 h-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <h3 id="kpi-acuan" class="text-2xl font-display font-extrabold text-slate-900 dark:text-white">0</h3>
-                    <span class="text-xs text-slate-500">personel</span>
-                </div>
-                <p id="kpi-acuan-desa" class="text-[11px] text-slate-400 mt-1">Tersebar di 0 desa/kelurahan</p>
-            </div>
+        <!-- Tabel 20 Kolom -->
+        <div class="overflow-x-auto custom-scrollbar max-h-[540px]">
+          <table class="w-full text-left border-collapse whitespace-nowrap text-xs">
+            <thead id="tableHead" class="bg-slate-800 text-white sticky top-0 z-10"></thead>
+            <tbody id="tableBody" class="divide-y divide-slate-200 bg-white"></tbody>
+          </table>
+        </div>
 
-            <!-- KPI 2: Total Upload Terbaru -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Upload Desa Terbaru</span>
-                    <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-                        <i data-lucide="file-check" class="w-4 h-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <h3 id="kpi-terbaru" class="text-2xl font-display font-extrabold text-slate-900 dark:text-white">0</h3>
-                    <span class="text-xs text-slate-500">baris</span>
-                </div>
-                <p id="kpi-terbaru-sub" class="text-[11px] text-slate-400 mt-1">Dari 0 desa/kelurahan</p>
-            </div>
-
-            <!-- KPI 3: DATA BARU (BELUM DI ACUAN) -->
-            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/60 dark:to-teal-950/40 rounded-2xl p-4 border-2 border-emerald-500/50 shadow-sm relative">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Data Terbaru (Baru)</span>
-                    <div class="p-2 rounded-lg bg-emerald-600 text-white shadow-sm">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <h3 id="kpi-baru" class="text-2xl font-display font-extrabold text-emerald-700 dark:text-emerald-400">0</h3>
-                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-300">belum di acuan</span>
-                </div>
-                <p id="kpi-sudah-ada" class="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-1">0 data sudah ada di acuan</p>
-            </div>
-
-            <!-- KPI 4: Akumulasi Insentif -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span id="kpi-insentif-label" class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Insentif</span>
-                    <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-                        <i data-lucide="wallet" class="w-4 h-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 flex items-baseline gap-1">
-                    <h3 id="kpi-insentif" class="text-xl sm:text-2xl font-display font-extrabold text-slate-900 dark:text-white">Rp 0</h3>
-                </div>
-                <p id="kpi-insentif-sub" class="text-[11px] text-slate-400 mt-1">Akumulasi besaran insentif</p>
-            </div>
-
-            <!-- KPI 5: Kepesertaan BPJS Ketenagakerjaan -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">BPJS Ketenagakerjaan</span>
-                    <div class="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-                        <i data-lucide="shield-check" class="w-4 h-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 flex items-baseline gap-2">
-                    <h3 id="kpi-bpjs" class="text-2xl font-display font-extrabold text-slate-900 dark:text-white">0%</h3>
-                    <span id="kpi-bpjs-count" class="text-xs text-slate-500">(0 aktif)</span>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-1">Pada tampilan data aktif saat ini</p>
-            </div>
-        </section>
-
-        <!-- Section 3: Dashboard Analitik (Publik & Admin) -->
-        <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div class="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-linmas-600"></i>
-                    <h2 class="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white">Dashboard Analitik & Sebaran Wilayah Musi Rawas</h2>
-                </div>
-                <button onclick="toggleCharts()" id="btn-toggle-charts" class="text-xs font-semibold text-linmas-600 dark:text-linmas-400 hover:underline flex items-center gap-1">
-                    <span>Sembunyikan Grafik</span>
-                    <i data-lucide="chevron-up" class="w-4 h-4"></i>
-                </button>
-            </div>
-            
-            <div id="charts-container" class="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Chart 1: Sebaran per Kecamatan / Kelurahan -->
-                <div class="lg:col-span-6 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Sebaran Personel per Kecamatan (Baru vs Terdaftar)</h3>
-                    <div class="h-64 relative">
-                        <canvas id="chart-wilayah"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 2: Status Keaktifan & BPJS -->
-                <div class="lg:col-span-3 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Status BPJS Ketenagakerjaan</h3>
-                    <div class="h-64 relative flex items-center justify-center">
-                        <canvas id="chart-bpjs"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 3: Kategori & Tingkat Anggota -->
-                <div class="lg:col-span-3 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Kategori & Tingkat Anggota</h3>
-                    <div class="h-64 relative">
-                        <canvas id="chart-kategori"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 4: Tabs, Filter Lengkap & Tabel Utama (20 Kolom) -->
-        <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            
-            <!-- Mode Tabs Header -->
-            <div class="border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 pt-4 bg-slate-50/50 dark:bg-slate-900/50">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3">
-                    <!-- Navigation Tabs (Disesuaikan otomatis untuk Publik vs Admin) -->
-                    <div id="table-tabs-container" class="flex flex-wrap items-center gap-2" role="tablist">
-                        <button onclick="switchTab('baru')" id="tab-baru" class="admin-only-tab tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition bg-linmas-600 text-white shadow-sm">
-                            <i data-lucide="sparkles" class="w-4 h-4"></i>
-                            <span>Data Terbaru (Belum di Acuan)</span>
-                            <span id="count-tab-baru" class="px-2 py-0.5 text-xs rounded-full bg-white/20 text-white">0</span>
-                        </button>
-
-                        <button onclick="switchTab('semua_terbaru')" id="tab-semua_terbaru" class="admin-only-tab tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100">
-                            <i data-lucide="layers" class="w-4 h-4"></i>
-                            <span>Semua Upload Desa</span>
-                            <span id="count-tab-semua_terbaru" class="px-2 py-0.5 text-xs rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">0</span>
-                        </button>
-
-                        <button onclick="switchTab('sudah_ada')" id="tab-sudah_ada" class="admin-only-tab tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100">
-                            <i data-lucide="copy-check" class="w-4 h-4"></i>
-                            <span>Sudah Ada di Acuan</span>
-                            <span id="count-tab-sudah_ada" class="px-2 py-0.5 text-xs rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">0</span>
-                        </button>
-
-                        <button onclick="switchTab('acuan')" id="tab-acuan" class="tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100">
-                            <i data-lucide="database" class="w-4 h-4"></i>
-                            <span id="label-tab-acuan">Database Acuan (Lifetime)</span>
-                            <span id="count-tab-acuan" class="px-2 py-0.5 text-xs rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">0</span>
-                        </button>
-                    </div>
-
-                    <!-- Export Controls (Admin Only untuk privasi data lengkap) -->
-                    <div id="admin-export-control" class="hidden items-center gap-2">
-                        <button onclick="exportCurrentTable()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>Export Excel (.xlsx)</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Advanced Multi-Filter Bar -->
-            <div class="p-4 sm:p-5 bg-slate-50/70 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800 space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                    <!-- Search Input -->
-                    <div class="lg:col-span-2 relative">
-                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="filter-search" oninput="applyFilters()" placeholder="Cari Nama, NIK, No. KTA, No. HP, Alamat..." class="w-full pl-10 pr-4 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                    </div>
-
-                    <!-- Filter Kecamatan -->
-                    <div>
-                        <select id="filter-kecamatan" onchange="onKecamatanChange()" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                            <option value="">Semua Kecamatan</option>
-                        </select>
-                    </div>
-
-                    <!-- Filter Kelurahan/Desa -->
-                    <div>
-                        <select id="filter-kelurahan" onchange="applyFilters()" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                            <option value="">Semua Kelurahan / Desa</option>
-                        </select>
-                    </div>
-
-                    <!-- Filter Status -->
-                    <div>
-                        <select id="filter-status" onchange="applyFilters()" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                            <option value="">Semua Status</option>
-                        </select>
-                    </div>
-
-                    <!-- Filter BPJS Ketenagakerjaan -->
-                    <div>
-                        <select id="filter-bpjs" onchange="applyFilters()" class="w-full px-3 py-2 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-linmas-500">
-                            <option value="">Semua BPJS Naker</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Baris Filter Tambahan -->
-                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <select id="filter-kategori" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                            <option value="">Semua Kategori</option>
-                        </select>
-
-                        <select id="filter-tingkat" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                            <option value="">Semua Tingkat</option>
-                        </select>
-
-                        <select id="filter-insentif" onchange="applyFilters()" class="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                            <option value="">Semua Ket. Insentif</option>
-                        </select>
-
-                        <button onclick="resetFilters()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1">
-                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Filter
-                        </button>
-                    </div>
-
-                    <div class="text-xs text-slate-500 dark:text-slate-400">
-                        Menampilkan <span id="filtered-count" class="font-bold text-slate-800 dark:text-white">0</span> data sesuai filter
-                    </div>
-                </div>
-            </div>
-
-            <!-- Responsive Table Wrapper (20 Kolom sesuai gambar) -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse whitespace-nowrap">
-                    <thead>
-                        <tr class="bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
-                            <th class="py-3.5 px-3 sticky left-0 z-20 bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">Aksi / Status</th>
-                            <th class="py-3.5 px-3 cursor-pointer hover:text-linmas-600" onclick="sortBy('No')">No</th>
-                            <th class="py-3.5 px-3 cursor-pointer hover:text-linmas-600" onclick="sortBy('Nama Lengkap')">Nama Lengkap</th>
-                            <th class="py-3.5 px-3 cursor-pointer hover:text-linmas-600" onclick="sortBy('NIK')">NIK</th>
-                            <th class="py-3.5 px-3">No. HP</th>
-                            <th class="py-3.5 px-3">Email</th>
-                            <th class="py-3.5 px-3 cursor-pointer hover:text-linmas-600" onclick="sortBy('Nomor KTA')">Nomor KTA</th>
-                            <th class="py-3.5 px-3 cursor-pointer hover:text-linmas-600" onclick="sortBy('Kecamatan')">Kecamatan</th>
-                            <th class="py-3.5 px-3 cursor-pointer hover:text-linmas-600" onclick="sortBy('Kelurahan')">Kelurahan</th>
-                            <th class="py-3.5 px-3">Alamat</th>
-                            <th class="py-3.5 px-3">Tingkat</th>
-                            <th class="py-3.5 px-3">Kategori</th>
-                            <th class="py-3.5 px-3">Status</th>
-                            <th class="py-3.5 px-3">Tgl Daftar</th>
-                            <th class="py-3.5 px-3">Keterangan Insentif</th>
-                            <th class="py-3.5 px-3 text-right">Besaran Insentif</th>
-                            <th class="py-3.5 px-3">Pendidikan Terakhir</th>
-                            <th class="py-3.5 px-3">Profesi Sebelumnya</th>
-                            <th class="py-3.5 px-3 text-center">Jml Keluarga Serumah</th>
-                            <th class="py-3.5 px-3">Keahlian</th>
-                            <th class="py-3.5 px-3">BPJS Ketenagakerjaan</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-[13px]">
-                        <!-- Rows rendered dynamically via JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Empty State -->
-            <div id="empty-state" class="hidden py-16 px-4 text-center">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                    <i data-lucide="folder-search" class="w-8 h-8"></i>
-                </div>
-                <h3 class="font-display font-bold text-base text-slate-800 dark:text-white">Tidak Ada Data Ditemukan</h3>
-                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1">
-                    Silakan unggah <b>Data Acuan</b> dan <b>Data Terbaru Desa</b> di panel atas, atau klik tombol <b>"Data Simulasi"</b> di pojok kanan atas untuk mencoba sistem.
-                </p>
-            </div>
-
-            <!-- Pagination Footer -->
-            <div class="px-5 py-3.5 bg-slate-50/70 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                    <span>Baris per halaman:</span>
-                    <select id="page-size" onchange="changePageSize()" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold">
-                        <option value="15">15</option>
-                        <option value="30">30</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <span id="pagination-info" class="ml-2">0 - 0 dari 0</span>
-                </div>
-
-                <div class="flex items-center gap-1.5" id="pagination-controls">
-                    <!-- Buttons rendered by JS -->
-                </div>
-            </div>
-        </section>
-
+        <!-- Footer Pagination -->
+        <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+          <div id="paginationInfo">Menampilkan 0 dari 0 data</div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="changePage(-1)" id="btnPrevPage" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg font-bold disabled:opacity-40">← Prev</button>
+            <span id="pageIndicator" class="px-2 font-bold">Hal 1</span>
+            <button onclick="changePage(1)" id="btnNextPage" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg font-bold disabled:opacity-40">Next →</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 px-4 sm:px-6 lg:px-8 mt-8">
-        <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-linmas-500"></span>
-                <span><strong>SIP-ASLINMAS</strong> Kabupaten Musi Rawas &bull; Satuan Perlindungan Masyarakat</span>
-            </div>
-            <div>
-                Format Kolom Terstandarisasi (20 Kolom Nasional) &bull; Siap Deploy GitHub & Vercel
-            </div>
-        </div>
+    <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
+      © 2026 <strong class="text-slate-700">ASLINMAS Kabupaten Musi Rawas</strong> — Lan Serasan Sekentenan
     </footer>
+  </div>
 
-    <!-- Modal Detail Anggota (20 Kolom Lengkap) -->
-    <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 bg-gradient-to-r from-linmas-800 to-linmas-700 text-white flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-                        <i data-lucide="id-card" class="w-5 h-5 text-amber-300"></i>
-                    </div>
-                    <div>
-                        <h3 id="modal-nama" class="font-display font-bold text-lg">Detail Anggota ASLINMAS</h3>
-                        <p id="modal-sub" class="text-xs text-linmas-100">NIK: - | KTA: -</p>
-                    </div>
-                </div>
-                <button onclick="toggleModal('detail-modal', false)" class="p-1.5 rounded-lg hover:bg-white/10 transition">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            
-            <div id="modal-detail-content" class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <!-- Filled dynamically -->
-            </div>
-
-            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex justify-end">
-                <button onclick="toggleModal('detail-modal', false)" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-white font-semibold text-xs">
-                    Tutup Detail
-                </button>
-            </div>
-        </div>
+  <!-- ==================== MODAL PENGATURAN SPREADSHEET API ==================== -->
+  <div id="sheetConfigModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-extrabold text-slate-900">⚙️ Koneksi Google Spreadsheet API</h3>
+        <button onclick="closeSheetConfigModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Masukkan URL Web App Google Apps Script (berakhiran <code class="bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700 font-bold">/exec</code>) untuk menyambungkan database <code class="font-bold">DataAcuan</code> dan <code class="font-bold">Users</code>.
+      </p>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">URL Web App Google Apps Script</label>
+        <input type="url" id="inputGasUrl" placeholder="https://script.google.com/macros/s/...../exec"
+               class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 outline-none">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeSheetConfigModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl">Batal</button>
+        <button onclick="saveGasUrl()" class="px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl">Simpan & Muat Data</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Modal Panduan Deploy GitHub & Vercel -->
-    <div id="deploy-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-                <div class="flex items-center gap-2.5">
-                    <i data-lucide="rocket" class="w-5 h-5 text-indigo-400"></i>
-                    <h3 class="font-display font-bold text-base">Panduan Deploy ke GitHub & Vercel</h3>
-                </div>
-                <button onclick="toggleModal('deploy-modal', false)" class="p-1.5 rounded-lg hover:bg-white/10 transition">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                <p>Aplikasi ini dirancang dalam arsitektur <strong>Single-File Web App (Zero-Build)</strong> sehingga sangat cepat dan gratis di-hosting melalui <strong>GitHub + Vercel</strong>:</p>
-                
-                <div class="space-y-3">
-                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
-                        <h4 class="font-bold text-slate-900 dark:text-white mb-1">Langkah 1: Simpan Kode sebagai <code class="text-linmas-600 dark:text-linmas-400">index.html</code></h4>
-                        <p>Simpan seluruh kode aplikasi ini ke dalam satu file bernama <code>index.html</code> di folder proyek Anda.</p>
-                    </div>
+  <script>
+    // =========================================================================
+    // 1. KONFIGURASI UTAMA (TEMPEL URL /exec GOOGLE APPS SCRIPT ANDA DI SINI)
+    // =========================================================================
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbw6_owjEFw1WTMH92blfuOXmRFgLCCth4Je6bXvZh3y6AcjuqHMgc4PdN7_omRBdSaL/exec"; // Contoh: "https://script.google.com/macros/s/AKfycb.../exec"
 
-                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
-                        <h4 class="font-bold text-slate-900 dark:text-white mb-1">Langkah 2: Upload ke Repository GitHub</h4>
-                        <p>Buat repository baru di <b>github.com</b> (misal: <code>rekap-aslinmas-musirawas</code>), lalu upload file <code>index.html</code> tersebut (atau push via Git).</p>
-                    </div>
+    // 20 Header Resmi Sesuai Lampiran Gambar Anda
+    const HEADERS = [
+      "No",
+      "Nama Lengkap",
+      "NIK",
+      "No. HP",
+      "Email",
+      "Nomor KTA",
+      "Kecamatan",
+      "Kelurahan",
+      "Alamat",
+      "Tingkat",
+      "Kategori",
+      "Status",
+      "Tgl Daftar",
+      "Keterangan Insentif",
+      "Besaran Insentif",
+      "Pendidikan Terakhir",
+      "Profesi Sebelumnya",
+      "Jumlah Keluarga Serumah",
+      "Keahlian",
+      "BPJS Ketenagakerjaan"
+    ];
 
-                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
-                        <h4 class="font-bold text-slate-900 dark:text-white mb-1">Langkah 3: Import & Deploy di Vercel</h4>
-                        <p>Buka <b>vercel.com</b> &rarr; Login dengan GitHub &rarr; Klik <b>"Add New Project"</b> &rarr; Pilih repo <code>rekap-aslinmas-musirawas</code> &rarr; Klik <b>"Deploy"</b> (Framework Preset biarkan <i>Other</i>). Dalam 15 detik website langsung online!</p>
-                    </div>
-                </div>
-            </div>
+    // Data Contoh Awal (Ditampilkan jika Spreadsheet belum terisi/terhubung)
+    const SAMPLE_DATA = [
+      {
+        "No": "1", "Nama Lengkap": "HENDRA SAPUTRA", "NIK": "1605011205880001", "No. HP": "081278901234",
+        "Email": "hendra.linmas@gmail.com", "Nomor KTA": "KTA-MURA-001", "Kecamatan": "Megang Sakti",
+        "Kelurahan": "Megang Sakti I", "Alamat": "Dusun II RT 04", "Tingkat": "Desa/Kelurahan",
+        "Kategori": "Satlinmas Inti", "Status": "Aktif", "Tgl Daftar": "2024-01-15",
+        "Keterangan Insentif": "Tersalurkan", "Besaran Insentif": "500000", "Pendidikan Terakhir": "SMA/Sederajat",
+        "Profesi Sebelumnya": "Petani", "Jumlah Keluarga Serumah": "4", "Keahlian": "Pengamanan & P3K",
+        "BPJS Ketenagakerjaan": "Terdaftar"
+      },
+      {
+        "No": "2", "Nama Lengkap": "SITI AMINAH", "NIK": "1605024508920003", "No. HP": "085267894321",
+        "Email": "siti.aminah@gmail.com", "Nomor KTA": "KTA-MURA-002", "Kecamatan": "Muara Beliti",
+        "Kelurahan": "Pasar Muara Beliti", "Alamat": "Jl. Lintas Sumatera RT 02", "Tingkat": "Desa/Kelurahan",
+        "Kategori": "Satlinmas Kebencanaan", "Status": "Aktif", "Tgl Daftar": "2024-02-10",
+        "Keterangan Insentif": "Tersalurkan", "Besaran Insentif": "500000", "Pendidikan Terakhir": "D3",
+        "Profesi Sebelumnya": "Wiraswasta", "Jumlah Keluarga Serumah": "3", "Keahlian": "Evakuasi Banjir",
+        "BPJS Ketenagakerjaan": "Terdaftar"
+      },
+      {
+        "No": "3", "Nama Lengkap": "BAMBANG IRAWAN", "NIK": "1605031911850002", "No. HP": "082188776655",
+        "Email": "bambang.irawan@gmail.com", "Nomor KTA": "KTA-MURA-003", "Kecamatan": "Tugumulyo",
+        "Kelurahan": "Srikaton", "Alamat": "Blok C RT 05", "Tingkat": "Desa/Kelurahan",
+        "Kategori": "Satlinmas Inti", "Status": "Aktif", "Tgl Daftar": "2023-11-20",
+        "Keterangan Insentif": "Proses", "Besaran Insentif": "500000", "Pendidikan Terakhir": "SMP",
+        "Profesi Sebelumnya": "Buruh Tani", "Jumlah Keluarga Serumah": "5", "Keahlian": "Logistik & Dapur Umum",
+        "BPJS Ketenagakerjaan": "Belum Terdaftar"
+      }
+    ];
 
-            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex justify-end">
-                <button onclick="toggleModal('deploy-modal', false)" class="px-4 py-2 rounded-xl bg-linmas-600 hover:bg-linmas-700 text-white font-semibold text-xs">
-                    Mengerti
-                </button>
-            </div>
-        </div>
-    </div>
+    // State Aplikasi
+    let state = {
+      gasUrl: localStorage.getItem('aslinmas_gas_url') || DEFAULT_GAS_URL,
+      user: JSON.parse(localStorage.getItem('aslinmas_user') || 'null'),
+      dataAcuan: [],
+      dataBaru: [],
+      filteredData: [],
+      activeTab: 'acuan', // 'acuan' atau 'baru'
+      currentPage: 1,
+      rowsPerPage: 15
+    };
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // =========================================================================
-        // 1. KONFIGURASI KOLOM RESMI SESUAI LAMPIRAN GAMBAR (20 KOLOM)
-        // =========================================================================
-        const OFFICIAL_HEADERS = [
-            "No",
-            "Nama Lengkap",
-            "NIK",
-            "No. HP",
-            "Email",
-            "Nomor KTA",
-            "Kecamatan",
-            "Kelurahan",
-            "Alamat",
-            "Tingkat",
-            "Kategori",
-            "Status",
-            "Tgl Daftar",
-            "Keterangan Insentif",
-            "Besaran Insentif",
-            "Pendidikan Terakhir",
-            "Profesi Sebelumnya",
-            "Jumlah Keluarga Serumah",
-            "Keahlian",
-            "BPJS Ketenagakerjaan"
-        ];
+    let chartKecInstance = null;
+    let chartStatusInstance = null;
 
-        // State Aplikasi
-        let state = {
-            acuanData: [],          // Master Data Acuan
-            terbaruData: [],        // Data hasil upload terbaru desa
-            diffBaru: [],           // Data terbaru yang TIDAK ADA di Acuan
-            diffSudahAda: [],       // Data terbaru yang SUDAH ADA di Acuan
-            activeTab: 'baru',      // 'baru' | 'semua_terbaru' | 'sudah_ada' | 'acuan'
-            filteredData: [],       // Data setelah difilter
-            currentPage: 1,
-            pageSize: 15,
-            sortCol: null,
-            sortAsc: true,
-            charts: {
-                wilayah: null,
-                bpjs: null,
-                kategori: null
-            }
-        };
+    // =========================================================================
+    // 2. ROUTING (/ vs /login)
+    // =========================================================================
+    function handleRouting() {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
 
-        // =========================================================================
-        // 2. INISIALISASI & LOCAL STORAGE
-        // =========================================================================
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            loadThemePreference();
-            loadFromLocalStorage();
-            initCharts();
-            runComparison();
-        });
-
-        function loadThemePreference() {
-            const savedTheme = localStorage.getItem('aslinmas_theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
+      if (path.endsWith('/login') || hash === '#/login') {
+        if (state.user) {
+          navigateTo('/');
+          return;
         }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            html.classList.toggle('dark');
-            const isDark = html.classList.contains('dark');
-            localStorage.setItem('aslinmas_theme', isDark ? 'dark' : 'light');
-            updateCharts();
-        }
-
-        function saveToLocalStorage() {
-            try {
-                localStorage.setItem('aslinmas_mura_acuan', JSON.stringify(state.acuanData));
-                localStorage.setItem('aslinmas_mura_terbaru', JSON.stringify(state.terbaruData));
-            } catch (e) {
-                console.warn('LocalStorage penuh atau dibatasi:', e);
-            }
-        }
-
-        function loadFromLocalStorage() {
-            try {
-                const acuan = localStorage.getItem('aslinmas_mura_acuan');
-                const terbaru = localStorage.getItem('aslinmas_mura_terbaru');
-                if (acuan) {
-                    state.acuanData = JSON.parse(acuan);
-                    if (state.acuanData.length > 0) {
-                        document.getElementById('acuan-filename').textContent = `Tersimpan di memori (${state.acuanData.length} baris)`;
-                    }
-                }
-                if (terbaru) {
-                    state.terbaruData = JSON.parse(terbaru);
-                    if (state.terbaruData.length > 0) {
-                        document.getElementById('terbaru-filename').textContent = `Tersimpan di memori (${state.terbaruData.length} baris)`;
-                    }
-                }
-            } catch (e) {
-                console.error('Gagal memuat LocalStorage:', e);
-            }
-        }
-
-        function clearDataset(type) {
-            if (type === 'acuan') {
-                state.acuanData = [];
-                document.getElementById('file-acuan').value = '';
-                document.getElementById('acuan-filename').textContent = 'Belum ada file diunggah';
-                showToast('Data Acuan berhasil dikosongkan.', 'info');
-            } else {
-                state.terbaruData = [];
-                document.getElementById('file-terbaru').value = '';
-                document.getElementById('terbaru-filename').textContent = 'Mendukung file .xlsx, .xls, .csv';
-                showToast('Data Upload Terbaru berhasil dikosongkan.', 'info');
-            }
-            saveToLocalStorage();
-            runComparison();
-        }
-
-        // =========================================================================
-        // 3. PARSING EXCEL / CSV & NORMALISASI HEADER (SHEETJS)
-        // =========================================================================
-        function normalizeHeaderKey(rawKey) {
-            if (!rawKey) return '';
-            const clean = String(rawKey).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-            
-            const mapping = {
-                'no': 'No',
-                'nomor': 'No',
-                'namalengkap': 'Nama Lengkap',
-                'nama': 'Nama Lengkap',
-                'nik': 'NIK',
-                'nohp': 'No. HP',
-                'hp': 'No. HP',
-                'notelepon': 'No. HP',
-                'email': 'Email',
-                'nomorkta': 'Nomor KTA',
-                'nokta': 'Nomor KTA',
-                'kta': 'Nomor KTA',
-                'kecamatan': 'Kecamatan',
-                'kelurahan': 'Kelurahan',
-                'desa': 'Kelurahan',
-                'desakelurahan': 'Kelurahan',
-                'kelurahandesa': 'Kelurahan',
-                'alamat': 'Alamat',
-                'tingkat': 'Tingkat',
-                'kategori': 'Kategori',
-                'status': 'Status',
-                'tgldaftar': 'Tgl Daftar',
-                'tanggaldaftar': 'Tgl Daftar',
-                'keteranganinsentif': 'Keterangan Insentif',
-                'ketinsentif': 'Keterangan Insentif',
-                'besaraninsentif': 'Besaran Insentif',
-                'insentif': 'Besaran Insentif',
-                'pendidikanterakhir': 'Pendidikan Terakhir',
-                'pendidikan': 'Pendidikan Terakhir',
-                'profesisebelumnya': 'Profesi Sebelumnya',
-                'profesi': 'Profesi Sebelumnya',
-                'pekerjaan': 'Profesi Sebelumnya',
-                'jumlahkeluargaserumah': 'Jumlah Keluarga Serumah',
-                'jmlkeluargaserumah': 'Jumlah Keluarga Serumah',
-                'jumlahkeluarga': 'Jumlah Keluarga Serumah',
-                'keahlian': 'Keahlian',
-                'bpjsketenagakerjaan': 'BPJS Ketenagakerjaan',
-                'bpjs': 'BPJS Ketenagakerjaan'
-            };
-
-            return mapping[clean] || rawKey.trim();
-        }
-
-        function normalizeRow(rawRow, index) {
-            const normalized = {};
-            OFFICIAL_HEADERS.forEach(h => normalized[h] = '');
-
-            Object.keys(rawRow).forEach(k => {
-                const mappedKey = normalizeHeaderKey(k);
-                if (OFFICIAL_HEADERS.includes(mappedKey)) {
-                    let val = rawRow[k];
-                    // Bersihkan NIK / No HP agar tidak berubah format eksponensial/spasi
-                    if (mappedKey === 'NIK' || mappedKey === 'Nomor KTA' || mappedKey === 'No. HP') {
-                        val = String(val ?? '').replace(/^'/, '').trim();
-                    } else {
-                        val = String(val ?? '').trim();
-                    }
-                    normalized[mappedKey] = val;
-                }
-            });
-
-            if (!normalized['No']) {
-                normalized['No'] = String(index + 1);
-            }
-            return normalized;
-        }
-
-        async function handleFileUpload(event, targetType) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
-
-            let combinedRows = [];
-            let fileNames = [];
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                fileNames.push(file.name);
-                try {
-                    const data = await file.arrayBuffer();
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonRows = XLSX.utils.sheet_to_json(firstSheet, { defval: '', raw: false });
-                    
-                    const cleanedRows = jsonRows
-                        .filter(r => Object.values(r).some(v => String(v).trim() !== ''))
-                        .map((r, idx) => normalizeRow(r, combinedRows.length + idx));
-                    
-                    combinedRows = combinedRows.concat(cleanedRows);
-                } catch (err) {
-                    console.error(err);
-                    showToast(`Gagal membaca file ${file.name}. Pastikan format Excel/CSV valid.`, 'error');
-                    return;
-                }
-            }
-
-            if (combinedRows.length === 0) {
-                showToast('File kosong atau header tidak terbaca.', 'error');
-                return;
-            }
-
-            if (targetType === 'acuan') {
-                state.acuanData = combinedRows;
-                document.getElementById('acuan-filename').textContent = `${fileNames.join(', ')} (${combinedRows.length} data)`;
-                showToast(`Berhasil memuat ${combinedRows.length} data Acuan Master.`, 'success');
-            } else {
-                state.terbaruData = combinedRows;
-                document.getElementById('terbaru-filename').textContent = `${fileNames.join(', ')} (${combinedRows.length} data)`;
-                showToast(`Berhasil memuat ${combinedRows.length} data Terbaru Desa.`, 'success');
-            }
-
-            saveToLocalStorage();
-            runComparison();
-        }
-
-        // =========================================================================
-        // 4. MESIN KOMPARASI (DIFF ENGINE: DATA BARU VS DATA ACUAN)
-        // =========================================================================
-        function getRecordSignature(row, keyMode) {
-            const cleanStr = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (keyMode === 'Nomor KTA') {
-                const kta = cleanStr(row['Nomor KTA']);
-                return kta ? `kta_${kta}` : `fallback_${cleanStr(row['Nama Lengkap'])}_${cleanStr(row['Kelurahan'])}`;
-            } else if (keyMode === 'NIK_OR_NAMA') {
-                const nik = cleanStr(row['NIK']);
-                if (nik && nik.length >= 8) return `nik_${nik}`;
-                return `nama_${cleanStr(row['Nama Lengkap'])}_${cleanStr(row['Kelurahan'])}`;
-            } else {
-                // Default: NIK
-                const nik = cleanStr(row['NIK']);
-                return nik ? `nik_${nik}` : `fallback_${cleanStr(row['Nama Lengkap'])}_${cleanStr(row['Kelurahan'])}`;
-            }
-        }
-
-        function runComparison() {
-            const keyMode = document.getElementById('compare-key').value;
-            
-            // Buat Set signature dari Data Acuan
-            const acuanSignatures = new Set();
-            state.acuanData.forEach(row => {
-                acuanSignatures.add(getRecordSignature(row, keyMode));
-            });
-
-            const baru = [];
-            const sudahAda = [];
-
-            state.terbaruData.forEach((row, idx) => {
-                const sig = getRecordSignature(row, keyMode);
-                const isExist = acuanSignatures.has(sig);
-                const enrichedRow = {
-                    ...row,
-                    _statusKomparasi: isExist ? 'TERDAFTAR' : 'BARU',
-                    _rowIndex: idx + 1
-                };
-
-                if (isExist) {
-                    sudahAda.push(enrichedRow);
-                } else {
-                    baru.push(enrichedRow);
-                }
-            });
-
-            state.diffBaru = baru;
-            state.diffSudahAda = sudahAda;
-
-            // Update Badge & KPI Counters
-            updateBadgesAndKPI();
-            populateFilterOptions();
-            applyFilters();
-        }
-
-        function mergeNewToMaster() {
-            if (state.diffBaru.length === 0) {
-                showToast('Tidak ada data baru untuk digabungkan ke Data Acuan.', 'info');
-                return;
-            }
-
-            const countToMerge = state.diffBaru.length;
-            const cleanNewRows = state.diffBaru.map((r, i) => {
-                const copy = { ...r };
-                delete copy._statusKomparasi;
-                delete copy._rowIndex;
-                copy['No'] = String(state.acuanData.length + i + 1);
-                return copy;
-            });
-
-            state.acuanData = state.acuanData.concat(cleanNewRows);
-            document.getElementById('acuan-filename').textContent = `Master Terupdate (${state.acuanData.length} data)`;
-            
-            saveToLocalStorage();
-            runComparison();
-            showToast(`${countToMerge} anggota ASLINMAS baru berhasil disahkan masuk ke Data Acuan!`, 'success');
-        }
-
-        // =========================================================================
-        // 5. KPI CARDS & DASHBOARD CHARTS
-        // =========================================================================
-        function parseCurrencyNumber(val) {
-            if (!val) return 0;
-            const num = parseFloat(String(val).replace(/[^0-9.-]+/g, ''));
-            return isNaN(num) ? 0 : num;
-        }
-
-        function formatRupiah(num) {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                maximumFractionDigits: 0
-            }).format(num);
-        }
-
-        function updateBadgesAndKPI() {
-            document.getElementById('badge-acuan-count').textContent = `${state.acuanData.length} Data`;
-            document.getElementById('badge-terbaru-count').textContent = `${state.terbaruData.length} Baris Diunggah`;
-
-            // Tab counters
-            document.getElementById('count-tab-baru').textContent = state.diffBaru.length;
-            document.getElementById('count-tab-semua_terbaru').textContent = state.terbaruData.length;
-            document.getElementById('count-tab-sudah_ada').textContent = state.diffSudahAda.length;
-            document.getElementById('count-tab-acuan').textContent = state.acuanData.length;
-
-            // KPI 1 & 2
-            document.getElementById('kpi-acuan').textContent = state.acuanData.length.toLocaleString('id-ID');
-            document.getElementById('kpi-terbaru').textContent = state.terbaruData.length.toLocaleString('id-ID');
-            
-            const uniqueDesa = new Set(state.terbaruData.map(r => r['Kelurahan']).filter(Boolean));
-            document.getElementById('kpi-terbaru-sub').textContent = `Dari ${uniqueDesa.size} desa/kelurahan`;
-
-            // KPI 3: Data Baru
-            document.getElementById('kpi-baru').textContent = state.diffBaru.length.toLocaleString('id-ID');
-            document.getElementById('kpi-sudah-ada').textContent = `${state.diffSudahAda.length} data sudah ada di acuan`;
-
-            // KPI 4: Total Insentif Data Baru
-            const totalInsentifBaru = state.diffBaru.reduce((acc, row) => acc + parseCurrencyNumber(row['Besaran Insentif']), 0);
-            document.getElementById('kpi-insentif').textContent = formatRupiah(totalInsentifBaru);
-
-            // Button Merge State
-            const btnMerge = document.getElementById('btn-merge-master');
-            btnMerge.disabled = state.diffBaru.length === 0;
-        }
-
-        function updateActiveTabKPI(dataset) {
-            // KPI 5: BPJS Ketenagakerjaan pada dataset aktif
-            const total = dataset.length;
-            const aktifBpjs = dataset.filter(r => {
-                const v = (r['BPJS Ketenagakerjaan'] || '').toLowerCase();
-                return v.includes('aktif') || v.includes('terdaftar') || v.includes('ya') || v.includes('sudah');
-            }).length;
-
-            const pct = total > 0 ? Math.round((aktifBpjs / total) * 100) : 0;
-            document.getElementById('kpi-bpjs').textContent = `${pct}%`;
-            document.getElementById('kpi-bpjs-count').textContent = `(${aktifBpjs}/${total})`;
-        }
-
-        // =========================================================================
-        // 6. TABS, FILTERING, SORTING & PAGINATION
-        // =========================================================================
-        function getActiveRawDataset() {
-            switch (state.activeTab) {
-                case 'baru':
-                    return state.diffBaru;
-                case 'semua_terbaru':
-                    return state.terbaruData.map(r => {
-                        const isExist = state.diffSudahAda.some(s => s['NIK'] === r['NIK'] && s['Nama Lengkap'] === r['Nama Lengkap']);
-                        return { ...r, _statusKomparasi: isExist ? 'TERDAFTAR' : 'BARU' };
-                    });
-                case 'sudah_ada':
-                    return state.diffSudahAda;
-                case 'acuan':
-                    return state.acuanData.map(r => ({ ...r, _statusKomparasi: 'ACUAN' }));
-                default:
-                    return state.diffBaru;
-            }
-        }
-
-        function switchTab(tabName) {
-            state.activeTab = tabName;
-            state.currentPage = 1;
-
-            // Update styling tombol tab
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100';
-    <!-- Modal Konfigurasi Google Spreadsheet (Database & Users) + Panduan Vercel -->
-    <div id="spreadsheet-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-                <div class="flex items-center gap-2.5">
-                    <i data-lucide="sheet" class="w-5 h-5 text-emerald-400"></i>
-                    <h3 class="font-display font-bold text-base">Koneksi Database Google Spreadsheet & Deploy Vercel</h3>
-                </div>
-                <button onclick="toggleModal('spreadsheet-modal', false)" class="p-1.5 rounded-lg hover:bg-white/10 transition">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto space-y-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                
-                <!-- Form Input URL Google Apps Script Web App -->
-                <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-3">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                        URL Web App Google Apps Script (Spreadsheet API)
-                    </label>
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="url" id="input-gas-url" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="flex-1 px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <button onclick="saveGasUrl()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs whitespace-nowrap">
-                            Simpan & Tes Koneksi
-                        </button>
-                    </div>
-                    <p class="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">
-                        *Kosongkan jika ingin menjalankan mode simulasi lokal. Jika diisi, login user (`Users`) dan rekap acuan (`DataAcuan`) akan langsung membaca/menulis ke Google Spreadsheet Anda.
-                    </p>
-                </div>
-
-                <!-- Struktur Sheet yang Diperlukan -->
-                <div class="space-y-2">
-                    <h4 class="font-bold text-slate-900 dark:text-white">1. Siapkan 2 Tab Sheet di Google Spreadsheet Anda:</h4>
-                    <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li>Tab <b><code>DataAcuan</code></b>: Isi baris 1 dengan 20 header resmi (<i>No, Nama Lengkap, NIK, No. HP, Email, Nomor KTA, Kecamatan, Kelurahan, Alamat, Tingkat, Kategori, Status, Tgl Daftar, Keterangan Insentif, Besaran Insentif, Pendidikan Terakhir, Profesi Sebelumnya, Jumlah Keluarga Serumah, Keahlian, BPJS Ketenagakerjaan</i>).</li>
-                        <li>Tab <b><code>Users</code></b>: Isi baris 1 dengan header: <code>username</code> | <code>password</code> | <code>nama</code> | <code>role</code> | <code>wilayah</code> (Contoh isi baris 2: <code>admin</code> | <code>mura2026</code> | <code>Admin SatpolPP & Damkar</code> | <code>Admin Kabupaten</code> | <code>Semua</code>).</li>
-                    </ul>
-                </div>
-
-                <!-- Kode Google Apps Script (Code.gs) -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <h4 class="font-bold text-slate-900 dark:text-white">2. Salin Kode Backend <code class="text-linmas-600">Code.gs</code> (Ekstensi &rarr; Apps Script):</h4>
-                        <button onclick="copyGasScript()" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-white text-xs font-semibold">
-                            Salin Code.gs
-                        </button>
-                    </div>
-                    <pre id="gas-code-snippet" class="p-3.5 rounded-xl bg-slate-950 text-emerald-300 text-[11px] overflow-x-auto font-mono leading-normal">function doGet(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('DataAcuan');
-  const rows = sheet ? sheet.getDataRange().getDisplayValues() : [];
-  if (rows.length &lt; 2) return jsonOut({ status: 'ok', data: [] });
-  const headers = rows[0];
-  const data = rows.slice(1).map(r =&gt; {
-    let obj = {};
-    headers.forEach((h, i) =&gt; obj[h] = r[i] || '');
-    return obj;
-  });
-  return jsonOut({ status: 'ok', data: data });
-}
-
-function doPost(e) {
-  const payload = JSON.parse(e.postData.contents);
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (payload.action === 'login') {
-    const uSheet = ss.getSheetByName('Users');
-    const rows = uSheet.getDataRange().getDisplayValues();
-    for (let i = 1; i &lt; rows.length; i++) {
-      if (rows[i][0] === payload.username &amp;&amp; rows[i][1] === payload.password) {
-        return jsonOut({ status: 'ok', user: { username: rows[i][0], nama: rows[i][2], role: rows[i][3], wilayah: rows[i][4] } });
+        document.getElementById('loginView').classList.remove('hidden');
+        document.getElementById('mainAppView').classList.add('hidden');
+      } else {
+        document.getElementById('loginView').classList.add('hidden');
+        document.getElementById('mainAppView').classList.remove('hidden');
+        updateAuthUI();
       }
     }
-    return jsonOut({ status: 'error', message: 'Username atau Password salah!' });
-  }
-  if (payload.action === 'appendAcuan') {
-    const sheet = ss.getSheetByName('DataAcuan');
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const startNo = sheet.getLastRow();
-    const newRows = payload.rows.map((item, idx) =&gt; headers.map(h =&gt; h === 'No' ? (startNo + idx) : (item[h] || '')));
-    if (newRows.length &gt; 0) sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, headers.length).setValues(newRows);
-    return jsonOut({ status: 'ok', inserted: newRows.length });
-  }
-}
 
-function jsonOut(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}</pre>
-                </div>
+    function navigateTo(route) {
+      try {
+        window.history.pushState({}, '', route);
+      } catch (e) {
+        window.location.hash = route === '/login' ? '#/login' : '#/';
+      }
+      handleRouting();
+    }
 
-                <!-- File vercel.json untuk routing /login -->
-                <div class="space-y-1.5">
-                    <h4 class="font-bold text-slate-900 dark:text-white">3. Konfigurasi GitHub & Vercel (<code class="text-indigo-500">vercel.json</code>):</h4>
-                    <p class="text-xs">Letakkan <code>index.html</code>, <code>logo.png</code>, dan file <code>vercel.json</code> berikut di repository GitHub agar rute <code>/login</code> tidak 404 saat di-refresh di Vercel:</p>
-                    <pre class="p-3 rounded-xl bg-slate-950 text-amber-300 text-[11px] font-mono">{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }</pre>
-                </div>
-            </div>
+    window.addEventListener('popstate', handleRouting);
 
-            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex justify-end">
-                <button onclick="toggleModal('spreadsheet-modal', false)" class="px-4 py-2 rounded-xl bg-linmas-600 hover:bg-linmas-700 text-white font-semibold text-xs">
-                    Tutup Pengaturan
-                </button>
-            </div>
-        </div>
-    </div>
+    // =========================================================================
+    // 3. AUTENTIKASI & SESI LOGIN
+    // =========================================================================
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errBox = document.getElementById('loginError');
+      const btn = document.getElementById('btnLoginSubmit');
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // =========================================================================
-        // 1. KONFIGURASI KOLOM RESMI SESUAI LAMPIRAN GAMBAR (20 KOLOM)
-        // =========================================================================
-        const OFFICIAL_HEADERS = [
-            "No",
-            "Nama Lengkap",
-            "NIK",
-            "No. HP",
-            "Email",
-            "Nomor KTA",
-            "Kecamatan",
-            "Kelurahan",
-            "Alamat",
-            "Tingkat",
-            "Kategori",
-            "Status",
-            "Tgl Daftar",
-            "Keterangan Insentif",
-            "Besaran Insentif",
-            "Pendidikan Terakhir",
-            "Profesi Sebelumnya",
-            "Jumlah Keluarga Serumah",
-            "Keahlian",
-            "BPJS Ketenagakerjaan"
-        ];
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Memverifikasi ke Spreadsheet...';
 
-        // State Aplikasi (Mendukung Session Auth, Routing /login, & Google Spreadsheet)
-        let state = {
-            currentUser: null,      // null = Publik (Read-only), Object = Terautentikasi
-            gasUrl: 'https://script.google.com/macros/s/AKfycbw6_owjEFw1WTMH92blfuOXmRFgLCCth4Je6bXvZh3y6AcjuqHMgc4PdN7_omRBdSaL/exec',             // URL Web App Google Apps Script
-            acuanData: [],          // Master Data Acuan (Lifetime)
-            terbaruData: [],        // Data hasil upload terbaru desa
-            diffBaru: [],           // Data terbaru yang TIDAK ADA di Acuan
-            diffSudahAda: [],       // Data terbaru yang SUDAH ADA di Acuan
-            activeTab: 'acuan',     // Default 'acuan' untuk publik, 'baru' untuk operator
-            filteredData: [],
-            currentPage: 1,
-            pageSize: 15,
-            sortCol: null,
-            sortAsc: true,
-            charts: {
-                wilayah: null,
-                bpjs: null,
-                kategori: null
-            }
-        };
+      try {
+        if (state.gasUrl) {
+          const res = await fetch(state.gasUrl, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'login', username, password })
+          });
+          const result = await res.json();
+          if (result.success) {
+            state.user = result.user;
+            localStorage.setItem('aslinmas_user', JSON.stringify(result.user));
+            navigateTo('/');
+            renderAll();
+            return;
+          } else {
+            throw new Error(result.message || 'Username atau password tidak cocok di Spreadsheet.');
+          }
+        } else {
+          // Akun bawaan lokal jika URL Spreadsheet belum dipasang
+          if (username === 'admin' && password === 'admin123') {
+            state.user = { nama: 'Admin Kabupaten (Lokal)', role: 'Admin Kabupaten', wilayah: 'Semua Kecamatan' };
+            localStorage.setItem('aslinmas_user', JSON.stringify(state.user));
+            navigateTo('/');
+            renderAll();
+            return;
+          } else {
+            throw new Error('URL Spreadsheet belum diatur. Gunakan login default: admin / admin123');
+          }
+        }
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Masuk ke Dashboard Admin';
+      }
+    });
 
-        // =========================================================================
-        // 2. INISIALISASI, SESSION AUTH & ROUTING (/login)
-        // =========================================================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
-            loadThemePreference();
-            loadSessionAndConfig();
-            loadFromLocalStorage();
-            
-            // Jika belum ada data lokal dan GAS URL belum diset, muat data contoh awal agar portal publik tidak kosong
-            if (state.acuanData.length === 0 && !state.gasUrl) {
-                seedInitialPublicDemo();
-            }
+    function logout() {
+      state.user = null;
+      localStorage.removeItem('aslinmas_user');
+      state.activeTab = 'acuan';
+      updateAuthUI();
+      renderAll();
+    }
 
-            initCharts();
-            applyAuthUI();
-            handleRouteChange();
+    function updateAuthUI() {
+      const isLoggedIn = !!state.user;
+      document.getElementById('publicNavActions').classList.toggle('hidden', isLoggedIn);
+      document.getElementById('adminNavActions').classList.toggle('hidden', !isLoggedIn);
+      document.getElementById('adminWorkspace').classList.toggle('hidden', !isLoggedIn);
+      document.getElementById('publicInfoBanner').classList.toggle('hidden', isLoggedIn);
+      document.getElementById('tabBaru').classList.toggle('hidden', !isLoggedIn);
 
-            // Jika terhubung Google Spreadsheet, tarik data acuan terbaru secara otomatis
-            if (state.gasUrl) {
-                await syncFromSpreadsheet(true);
-            } else {
-                runComparison();
-            }
+      if (isLoggedIn) {
+        document.getElementById('adminUserName').textContent = state.user.nama || state.user.username || 'Operator';
+        document.getElementById('adminUserRole').textContent = `${state.user.role || 'Operator'} • ${state.user.wilayah || 'Musi Rawas'}`;
+      }
+    }
+
+    // =========================================================================
+    // 4. KONEKSI GOOGLE SPREADSHEET
+    // =========================================================================
+    async function fetchFromSpreadsheet() {
+      const badge = document.getElementById('sheetStatusBadge');
+      if (!state.gasUrl) {
+        state.dataAcuan = [...SAMPLE_DATA];
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Data Contoh (Lokal)`;
+        renderAll();
+        return;
+      }
+
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span> Sinkronisasi...`;
+      try {
+        const res = await fetch(`${state.gasUrl}?action=getData`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          state.dataAcuan = data.length > 0 ? data : [...SAMPLE_DATA];
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Terhubung Spreadsheet`;
+        }
+      } catch (e) {
+        console.error(e);
+        state.dataAcuan = [...SAMPLE_DATA];
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400"></span> Gagal Koneksi Sheet`;
+      }
+      renderAll();
+    }
+
+    async function syncAcuanToSpreadsheet() {
+      if (!state.gasUrl) {
+        alert('URL Web App Google Spreadsheet belum diatur. Klik tombol "⚙️ Sheet API" terlebih dahulu.');
+        openSheetConfigModal();
+        return;
+      }
+      const btn = document.getElementById('btnSyncSheet');
+      btn.disabled = true;
+      btn.textContent = '⏳ Menyimpan ke Spreadsheet...';
+
+      try {
+        const res = await fetch(state.gasUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'syncAcuan', data: state.dataAcuan })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(`Berhasil! ${result.total} data acuan telah tersimpan di Google Spreadsheet.`);
+        } else {
+          alert('Gagal menyimpan data ke Spreadsheet.');
+        }
+      } catch (e) {
+        alert('Terjadi kesalahan jaringan saat menghubungi Google Spreadsheet.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '☁️ Simpan Acuan ke Spreadsheet';
+      }
+    }
+
+    function openSheetConfigModal() {
+      document.getElementById('inputGasUrl').value = state.gasUrl;
+      document.getElementById('sheetConfigModal').classList.remove('hidden');
+    }
+
+    function closeSheetConfigModal() {
+      document.getElementById('sheetConfigModal').classList.add('hidden');
+    }
+
+    function saveGasUrl() {
+      const url = document.getElementById('inputGasUrl').value.trim();
+      state.gasUrl = url;
+      localStorage.setItem('aslinmas_gas_url', url);
+      closeSheetConfigModal();
+      fetchFromSpreadsheet();
+    }
+
+    // =========================================================================
+    // 5. UPLOAD EXCEL & KOMPARASI DATA BARU DESA VS DATA ACUAN
+    // =========================================================================
+    function handleFileUpload(event, targetType) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rawRows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+        // Normalisasi agar cocok dengan 20 header standar
+        const normalized = rawRows.map((row, index) => {
+          let cleanObj = {};
+          HEADERS.forEach(h => {
+            const matchedKey = Object.keys(row).find(k => k.trim().toLowerCase() === h.toLowerCase());
+            cleanObj[h] = matchedKey ? String(row[matchedKey]).trim() : "";
+          });
+          if (!cleanObj["No"]) cleanObj["No"] = String(index + 1);
+          return cleanObj;
         });
 
-        window.addEventListener('popstate', handleRouteChange);
+        if (targetType === 'acuan') {
+          state.dataAcuan = normalized;
+          alert(`Berhasil memuat ${normalized.length} baris Data Acuan Induk.`);
+          switchDatasetTab('acuan');
+        } else {
+          // Cari data terbaru yang BELUM ADA di Data Acuan (cek berdasarkan NIK atau Nomor KTA)
+          const existingNiks = new Set(state.dataAcuan.map(d => d["NIK"]).filter(Boolean));
+          const existingKtas = new Set(state.dataAcuan.map(d => d["Nomor KTA"]).filter(Boolean));
 
-        function navigateTo(path) {
-            try {
-                window.history.pushState({}, '', path);
-            } catch (e) {
-                // Fallback aman jika berjalan di dalam sandbox iframe
-                window.location.hash = path;
-            }
-            handleRouteChange();
+          state.dataBaru = normalized.filter(item => {
+            const nikMatch = item["NIK"] && existingNiks.has(item["NIK"]);
+            const ktaMatch = item["Nomor KTA"] && existingKtas.has(item["Nomor KTA"]);
+            return !nikMatch && !ktaMatch;
+          });
+
+          alert(`Ditemukan ${state.dataBaru.length} data anggota terbaru (dari total ${normalized.length} baris file desa) yang belum masuk tabel acuan.`);
+          switchDatasetTab('baru');
         }
 
-        function handleRouteChange() {
-            const pathname = window.location.pathname || '';
-            const hash = window.location.hash || '';
-            const isLoginRoute = pathname.endsWith('/login') || hash.includes('/login');
+        renderAll();
+        event.target.value = "";
+      };
+      reader.readAsArrayBuffer(file);
+    }
 
-            const loginView = document.getElementById('login-view');
-            const mainAppView = document.getElementById('main-app-view');
+    function approveNewToAcuan() {
+      if (state.dataBaru.length === 0) return;
+      state.dataAcuan = [...state.dataAcuan, ...state.dataBaru].map((item, idx) => ({
+        ...item,
+        "No": String(idx + 1)
+      }));
+      state.dataBaru = [];
+      switchDatasetTab('acuan');
+      renderAll();
+      alert('Seluruh data baru berhasil digabungkan ke Data Acuan! Jangan lupa klik "☁️ Simpan Acuan ke Spreadsheet" agar tersimpan permanen.');
+    }
 
-            if (isLoginRoute && !state.currentUser) {
-                loginView.classList.remove('hidden');
-                mainAppView.classList.add('hidden');
-            } else {
-                if (isLoginRoute && state.currentUser) {
-                    navigateTo('/');
-                    return;
-                }
-                loginView.classList.add('hidden');
-                mainAppView.classList.remove('hidden');
-            }
-            lucide.createIcons();
+    function downloadTemplateExcel() {
+      const ws = XLSX.utils.json_to_sheet([SAMPLE_DATA[0]], { header: HEADERS });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DataAcuan");
+      XLSX.writeFile(wb, "Template_ASLINMAS_MusiRawas_20Kolom.xlsx");
+    }
+
+    function exportCurrentTable() {
+      const dataToExport = state.filteredData.map((row, i) => {
+        let copy = { ...row, "No": String(i + 1) };
+        if (!state.user) {
+          copy["NIK"] = maskText(copy["NIK"], 4, 4);
+          copy["No. HP"] = maskText(copy["No. HP"], 4, 3);
+          copy["Email"] = maskEmail(copy["Email"]);
         }
+        return copy;
+      });
+      const ws = XLSX.utils.json_to_sheet(dataToExport, { header: HEADERS });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap_ASLINMAS");
+      XLSX.writeFile(wb, `Rekap_ASLINMAS_MusiRawas_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
 
-        function loadSessionAndConfig() {
-            const savedGas = localStorage.getItem('aslinmas_gas_url') || '';
-            state.gasUrl = savedGas;
-            const gasInput = document.getElementById('input-gas-url');
-            if (gasInput) gasInput.value = savedGas;
-            updateSheetStatusIndicator();
+    // =========================================================================
+    // 6. FILTER, PRIVASI PUBLIK, TABEL & GRAFIK
+    // =========================================================================
+    function switchDatasetTab(tab) {
+      state.activeTab = tab;
+      state.currentPage = 1;
 
-            const savedSession = sessionStorage.getItem('aslinmas_user_session') || localStorage.getItem('aslinmas_user_session');
-            if (savedSession) {
-                try {
-                    state.currentUser = JSON.parse(savedSession);
-                } catch (e) {
-                    state.currentUser = null;
-                }
-            }
+      const tabAcuan = document.getElementById('tabAcuan');
+      const tabBaru = document.getElementById('tabBaru');
+
+      if (tab === 'acuan') {
+        tabAcuan.className = "px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-700 text-white shadow-sm transition";
+        tabBaru.className = `${state.user ? '' : 'hidden'} px-4 py-2 rounded-xl text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:bg-amber-50 transition`;
+      } else {
+        tabBaru.className = "px-4 py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-white shadow-sm transition";
+        tabAcuan.className = "px-4 py-2 rounded-xl text-xs font-extrabold bg-white text-slate-700 border border-slate-300 hover:bg-emerald-50 transition";
+      }
+
+      populateFilterDropdowns();
+      applyFilters();
+    }
+
+    function populateFilterDropdowns() {
+      const source = state.activeTab === 'acuan' ? state.dataAcuan : state.dataBaru;
+      const kecSet = [...new Set(source.map(d => d["Kecamatan"]).filter(Boolean))].sort();
+      const statusSet = [...new Set(source.map(d => d["Status"]).filter(Boolean))].sort();
+      const bpjsSet = [...new Set(source.map(d => d["BPJS Ketenagakerjaan"]).filter(Boolean))].sort();
+
+      fillSelect('filterKecamatan', kecSet, 'Semua Kecamatan');
+      fillSelect('filterStatus', statusSet, 'Semua Status');
+      fillSelect('filterBpjs', bpjsSet, 'Semua BPJS');
+      updateKelurahanOptions();
+    }
+
+    function updateKelurahanOptions() {
+      const source = state.activeTab === 'acuan' ? state.dataAcuan : state.dataBaru;
+      const selectedKec = document.getElementById('filterKecamatan').value;
+      const filtered = selectedKec ? source.filter(d => d["Kecamatan"] === selectedKec) : source;
+      const kelSet = [...new Set(filtered.map(d => d["Kelurahan"]).filter(Boolean))].sort();
+      fillSelect('filterKelurahan', kelSet, 'Semua Desa/Kel');
+    }
+
+    function fillSelect(id, items, defaultLabel) {
+      const el = document.getElementById(id);
+      const currentVal = el.value;
+      el.innerHTML = `<option value="">${defaultLabel}</option>` +
+        items.map(v => `<option value="${v}">${v}</option>`).join('');
+      if (items.includes(currentVal)) el.value = currentVal;
+    }
+
+    function applyFilters() {
+      const source = state.activeTab === 'acuan' ? state.dataAcuan : state.dataBaru;
+      const q = document.getElementById('filterSearch').value.toLowerCase().trim();
+      const kec = document.getElementById('filterKecamatan').value;
+      const kel = document.getElementById('filterKelurahan').value;
+      const status = document.getElementById('filterStatus').value;
+      const bpjs = document.getElementById('filterBpjs').value;
+
+      state.filteredData = source.filter(row => {
+        if (kec && row["Kecamatan"] !== kec) return false;
+        if (kel && row["Kelurahan"] !== kel) return false;
+        if (status && row["Status"] !== status) return false;
+        if (bpjs && row["BPJS Ketenagakerjaan"] !== bpjs) return false;
+        if (q) {
+          const hay = `${row["Nama Lengkap"]} ${row["NIK"]} ${row["Nomor KTA"]} ${row["Alamat"]} ${row["Keahlian"]}`.toLowerCase();
+          if (!hay.includes(q)) return false;
         }
+        return true;
+      });
 
-        function updateSheetStatusIndicator() {
-            const dot = document.getElementById('sheet-status-dot');
-            if (!dot) return;
-            if (state.gasUrl) {
-                dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-amber-500';
-            }
-        }
+      state.currentPage = 1;
+      renderTable();
+    }
 
-        function saveGasUrl() {
-            const url = document.getElementById('input-gas-url').value.trim();
-            state.gasUrl = url;
-            localStorage.setItem('aslinmas_gas_url', url);
-            updateSheetStatusIndicator();
-            if (url) {
-                syncFromSpreadsheet();
-            } else {
-                showToast('URL Spreadsheet dikosongkan (Mode Lokal aktif).', 'info');
-            }
-        }
+    function resetFilters() {
+      document.getElementById('filterSearch').value = '';
+      document.getElementById('filterKecamatan').value = '';
+      updateKelurahanOptions();
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterBpjs').value = '';
+      applyFilters();
+    }
 
-        async function handleLoginSubmit(event) {
-            event.preventDefault();
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-            const errBox = document.getElementById('login-error-box');
-            const btn = document.getElementById('btn-submit-login');
+    function maskText(val, startShow, endShow) {
+      if (!val || val.length <= startShow + endShow) return val || '-';
+      return val.slice(0, startShow) + '******' + val.slice(-endShow);
+    }
 
-            errBox.classList.add('hidden');
-            btn.disabled = true;
-            btn.innerHTML = `<span>Memverifikasi ke Spreadsheet...</span>`;
+    function maskEmail(email) {
+      if (!email || !email.includes('@')) return email || '-';
+      const [name, domain] = email.split('@');
+      return name.slice(0, 2) + '***@' + domain;
+    }
 
-            try {
-                if (state.gasUrl) {
-                    const res = await fetch(state.gasUrl, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'login', username, password })
-                    });
-                    const json = await res.json();
-                    if (json.status === 'ok' && json.user) {
-                        completeLogin(json.user);
-                    } else {
-                        throw new Error(json.message || 'Username atau kata sandi tidak ditemukan di sheet Users.');
-                    }
-                } else {
-                    // Fallback kredensial default jika URL Spreadsheet belum dikonfigurasi
-                    if ((username === 'admin' && password === 'mura2026') || (username === 'operator' && password === 'aslinmas')) {
-                        completeLogin({
-                            username,
-                            nama: username === 'admin' ? 'Admin SatpolPP & Damkar' : 'Operator Kecamatan',
-                            role: 'Admin Kabupaten (Lokal)',
-                            wilayah: 'Kabupaten Musi Rawas'
-                        });
-                    } else {
-                        throw new Error('URL Spreadsheet belum diatur. Gunakan Mode Simulasi atau login default: admin / mura2026');
-                    }
-                }
-            } catch (err) {
-                errBox.textContent = err.message;
-                errBox.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="shield-check" class="w-4 h-4"></i><span>Masuk ke Ruang Kerja</span>`;
-                lucide.createIcons();
-            }
-        }
+    function renderTable() {
+      const thead = document.getElementById('tableHead');
+      const tbody = document.getElementById('tableBody');
+      const isLoggedIn = !!state.user;
 
-        function demoLogin() {
-            completeLogin({
-                username: 'operator_mura',
-                nama: 'Operator ASLINMAS Musi Rawas',
-                role: 'Administrator',
-                wilayah: 'Kabupaten Musi Rawas'
-            });
-        }
+      thead.innerHTML = `<tr>${HEADERS.map(h => `<th class="px-3.5 py-3 font-bold tracking-wider uppercase text-[11px]">${h}</th>`).join('')}</tr>`;
 
-        function completeLogin(userObj) {
-            state.currentUser = userObj;
-            sessionStorage.setItem('aslinmas_user_session', JSON.stringify(userObj));
-            localStorage.setItem('aslinmas_user_session', JSON.stringify(userObj));
-            
-            applyAuthUI();
-            switchTab('baru');
-            navigateTo('/');
-            showToast(`Selamat datang, ${userObj.nama}! Sesi operator aktif.`, 'success');
-        }
+      const start = (state.currentPage - 1) * state.rowsPerPage;
+      const pageRows = state.filteredData.slice(start, start + state.rowsPerPage);
 
-        function handleLogout() {
-            state.currentUser = null;
-            sessionStorage.removeItem('aslinmas_user_session');
-            localStorage.removeItem('aslinmas_user_session');
-            
-            applyAuthUI();
-            switchTab('acuan');
-            navigateTo('/');
-            showToast('Anda telah keluar. Tampilan kembali ke Portal Publik Lifetime.', 'info');
-        }
+      if (pageRows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${HEADERS.length}" class="px-4 py-10 text-center text-slate-400 font-medium">Tidak ada data yang sesuai dengan filter.</td></tr>`;
+      } else {
+        tbody.innerHTML = pageRows.map((row, idx) => {
+          return `<tr class="hover:bg-emerald-50/50 transition">
+            ${HEADERS.map(h => {
+              let val = row[h] || '-';
+              if (h === 'No') val = start + idx + 1;
+              if (!isLoggedIn) {
+                if (h === 'NIK') val = maskText(val, 4, 4);
+                if (h === 'No. HP') val = maskText(val, 4, 3);
+                if (h === 'Email') val = maskEmail(val);
+              }
+              if (h === 'Status') {
+                const badgeColor = val.toLowerCase() === 'aktif' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700';
+                return `<td class="px-3.5 py-2.5"><span class="px-2 py-0.5 rounded-full font-bold text-[11px] ${badgeColor}">${val}</span></td>`;
+              }
+              if (h === 'Besaran Insentif' && !isNaN(Number(val)) && val !== '-') {
+                val = 'Rp ' + Number(val).toLocaleString('id-ID');
+              }
+              return `<td class="px-3.5 py-2.5 text-slate-700 ${h === 'Nama Lengkap' ? 'font-bold text-slate-900' : ''}">${val}</td>`;
+            }).join('')}
+          </tr>`;
+        }).join('');
+      }
 
-        function applyAuthUI() {
-            const isLoggedIn = Boolean(state.currentUser);
-            const modeBadge = document.getElementById('mode-badge');
-            const btnNavLogin = document.getElementById('btn-nav-login');
-            const btnNavUser = document.getElementById('btn-nav-user');
-            const adminNavControls = document.getElementById('admin-nav-controls');
-            const publicBanner = document.getElementById('public-hero-banner');
-            const adminUploadSec = document.getElementById('admin-upload-section');
-            const adminExportCtrl = document.getElementById('admin-export-control');
+      const totalPages = Math.max(1, Math.ceil(state.filteredData.length / state.rowsPerPage));
+      document.getElementById('paginationInfo').textContent = `Menampilkan ${pageRows.length} dari ${state.filteredData.length} data`;
+      document.getElementById('pageIndicator').textContent = `Hal ${state.currentPage} / ${totalPages}`;
+      document.getElementById('btnPrevPage').disabled = state.currentPage <= 1;
+      document.getElementById('btnNextPage').disabled = state.currentPage >= totalPages;
+    }
 
-            if (isLoggedIn) {
-                modeBadge.textContent = 'Mode Operator Terverifikasi';
-                modeBadge.className = 'hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700';
-                
-                btnNavLogin.classList.add('hidden');
-                btnNavUser.classList.remove('hidden');
-                btnNavUser.classList.add('flex');
-                adminNavControls.classList.remove('hidden');
-                adminNavControls.classList.add('flex');
+    function changePage(delta) {
+      const totalPages = Math.max(1, Math.ceil(state.filteredData.length / state.rowsPerPage));
+      state.currentPage = Math.min(totalPages, Math.max(1, state.currentPage + delta));
+      renderTable();
+    }
 
-                document.getElementById('nav-user-name').textContent = state.currentUser.nama || state.currentUser.username;
-                document.getElementById('nav-user-role').textContent = state.currentUser.role || 'Operator';
+    function renderKPIsAndCharts() {
+      const data = state.dataAcuan;
+      const total = data.length;
+      const aktif = data.filter(d => (d["Status"] || "").toLowerCase() === 'aktif').length;
+      const bpjs = data.filter(d => (d["BPJS Ketenagakerjaan"] || "").toLowerCase().includes('terdaftar') && !(d["BPJS Ketenagakerjaan"] || "").toLowerCase().includes('belum')).length;
+      const kecCount = new Set(data.map(d => d["Kecamatan"]).filter(Boolean)).size;
+      const desaCount = new Set(data.map(d => d["Kelurahan"]).filter(Boolean)).size;
 
-                publicBanner.classList.add('hidden');
-                adminUploadSec.classList.remove('hidden');
-                adminUploadSec.classList.add('grid');
-                adminExportCtrl.classList.remove('hidden');
-                adminExportCtrl.classList.add('flex');
+      document.getElementById('kpiTotal').textContent = total.toLocaleString('id-ID');
+      document.getElementById('kpiAktif').textContent = aktif.toLocaleString('id-ID');
+      document.getElementById('kpiAktifPct').textContent = total ? `${Math.round((aktif / total) * 100)}% dari total` : '0% dari total';
+      document.getElementById('kpiBpjs').textContent = bpjs.toLocaleString('id-ID');
+      document.getElementById('kpiWilayah').textContent = `${kecCount} Kec / ${desaCount} Desa`;
 
-                document.querySelectorAll('.admin-only-tab').forEach(el => el.classList.remove('hidden'));
-            } else {
-                modeBadge.textContent = 'Rekap Publik Lifetime';
-                modeBadge.className = 'hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-linmas-100 text-linmas-800 dark:bg-linmas-900/60 dark:text-linmas-300 border border-linmas-200 dark:border-linmas-700';
+      document.getElementById('countAcuanBadge').textContent = `${total} Data`;
+      document.getElementById('countBaruBadge').textContent = `${state.dataBaru.length} Baru`;
+      document.getElementById('tabAcuanCount').textContent = total;
+      document.getElementById('tabBaruCount').textContent = state.dataBaru.length;
+      document.getElementById('btnApproveNew').classList.toggle('hidden', state.dataBaru.length === 0);
 
-                btnNavLogin.classList.remove('hidden');
-                btnNavUser.classList.add('hidden');
-                btnNavUser.classList.remove('flex');
-                adminNavControls.classList.add('hidden');
-                adminNavControls.classList.remove('flex');
+      // Chart Kecamatan
+      const kecMap = {};
+      data.forEach(d => {
+        const k = d["Kecamatan"] || "Lainnya";
+        kecMap[k] = (kecMap[k] || 0) + 1;
+      });
 
-                publicBanner.classList.remove('hidden');
-                adminUploadSec.classList.add('hidden');
-                adminUploadSec.classList.remove('grid');
-                adminExportCtrl.classList.add('hidden');
-                adminExportCtrl.classList.remove('flex');
+      if (chartKecInstance) chartKecInstance.destroy();
+      chartKecInstance = new Chart(document.getElementById('chartKecamatan'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(kecMap),
+          datasets: [{
+            label: 'Jumlah Anggota',
+            data: Object.values(kecMap),
+            backgroundColor: '#047857',
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
 
-                document.querySelectorAll('.admin-only-tab').forEach(el => el.classList.add('hidden'));
-                state.activeTab = 'acuan';
-            }
-            lucide.createIcons();
-        }
+      // Chart Status
+      const statusMap = {};
+      data.forEach(d => {
+        const s = d["Status"] || "Tidak Diketahui";
+        statusMap[s] = (statusMap[s] || 0) + 1;
+      });
 
-        // =========================================================================
-        // 4. SINKRONISASI GOOGLE SPREADSHEET & MESIN KOMPARASI
-        // =========================================================================
-        async function syncFromSpreadsheet(silent = false) {
-            if (!state.gasUrl) {
-                if (!silent) showToast('Masukkan URL Google Apps Script terlebih dahulu di menu Database Sheet.', 'info');
-                return;
-            }
-            try {
-                if (!silent) showToast('Menarik data Acuan dari Google Spreadsheet...', 'info');
-                const res = await fetch(state.gasUrl);
-                const json = await res.json();
-                if (json.status === 'ok' && Array.isArray(json.data)) {
-                    state.acuanData = json.data.map((r, i) => normalizeRow(r, i));
-                    document.getElementById('acuan-filename').textContent = `Google Spreadsheet (${state.acuanData.length} data)`;
-                    saveToLocalStorage();
-                    runComparison();
-                    if (!silent) showToast(`Berhasil sinkron ${state.acuanData.length} data dari Google Spreadsheet!`, 'success');
-                }
-            } catch (err) {
-                console.error(err);
-                if (!silent) showToast('Gagal terhubung ke Google Spreadsheet. Periksa URL Web App.', 'error');
-            }
-        }
+      if (chartStatusInstance) chartStatusInstance.destroy();
+      chartStatusInstance = new Chart(document.getElementById('chartStatus'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(statusMap),
+          datasets: [{
+            data: Object.values(statusMap),
+            backgroundColor: ['#059669', '#f59e0b', '#64748b', '#ef4444']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
 
-        async function mergeAndPushToSpreadsheet() {
-            if (state.diffBaru.length === 0) {
-                showToast('Tidak ada data baru untuk disahkan.', 'info');
-                return;
-            }
+    function renderAll() {
+      renderKPIsAndCharts();
+      populateFilterDropdowns();
+      applyFilters();
+    }
 
-            const countToMerge = state.diffBaru.length;
-            const cleanNewRows = state.diffBaru.map((r, i) => {
-                const copy = { ...r };
-                delete copy._statusKomparasi;
-                delete copy._rowIndex;
-                copy['No'] = String(state.acuanData.length + i + 1);
-                return copy;
-            });
-
-            // Jika Google Spreadsheet terhubung, kirim baris baru ke Sheet DataAcuan
-            if (state.gasUrl) {
-                const btn = document.getElementById('btn-merge-master');
-                btn.disabled = true;
-                btn.innerHTML = `<span>Menyimpan ke Sheet...</span>`;
-                try {
-                    const res = await fetch(state.gasUrl, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'appendAcuan', rows: cleanNewRows })
-                    });
-                    const json = await res.json();
-                    if (json.status !== 'ok') throw new Error('Gagal menyimpan ke Google Sheet');
-                    showToast(`${countToMerge} data baru berhasil disimpan ke Google Spreadsheet!`, 'success');
-                } catch (err) {
-                    showToast('Gagal menulis ke Spreadsheet, data disimpan secara lokal.', 'error');
-                } finally {
-                    btn.innerHTML = `<i data-lucide="cloud-upload" class="w-4 h-4"></i><span>Sahkan & Simpan ke Sheet</span>`;
-                    lucide.createIcons();
-                }
-            } else {
-                showToast(`${countToMerge} anggota ASLINMAS baru berhasil disahkan ke Data Acuan!`, 'success');
-            }
-
-            state.acuanData = state.acuanData.concat(cleanNewRows);
-            document.getElementById('acuan-filename').textContent = `Master Terupdate (${state.acuanData.length} data)`;
-            
-            saveToLocalStorage();
-            runComparison();
-        }
-        function updateBadgesAndKPI() {
-            document.getElementById('badge-acuan-count').textContent = `${state.acuanData.length} Data`;
-            document.getElementById('badge-terbaru-count').textContent = `${state.terbaruData.length} Baris Diunggah`;
-
-            // Tab counters
-            document.getElementById('count-tab-baru').textContent = state.diffBaru.length;
-            document.getElementById('count-tab-semua_terbaru').textContent = state.terbaruData.length;
-            document.getElementById('count-tab-sudah_ada').textContent = state.diffSudahAda.length;
-            document.getElementById('count-tab-acuan').textContent = state.acuanData.length;
-
-            // KPI 1: Total Lifetime (Data Acuan)
-            document.getElementById('kpi-acuan').textContent = state.acuanData.length.toLocaleString('id-ID');
-            const uniqueAcuanDesa = new Set(state.acuanData.map(r => r['Kelurahan']).filter(Boolean));
-            document.getElementById('kpi-acuan-desa').textContent = `Tersebar di ${uniqueAcuanDesa.size} desa/kelurahan`;
-
-            // KPI 2: Upload Desa Terbaru
-            document.getElementById('kpi-terbaru').textContent = state.terbaruData.length.toLocaleString('id-ID');
-            const uniqueDesa = new Set(state.terbaruData.map(r => r['Kelurahan']).filter(Boolean));
-            document.getElementById('kpi-terbaru-sub').textContent = `Dari ${uniqueDesa.size} desa/kelurahan`;
-
-            // KPI 3: Data Baru
-            document.getElementById('kpi-baru').textContent = state.diffBaru.length.toLocaleString('id-ID');
-            document.getElementById('kpi-sudah-ada').textContent = `${state.diffSudahAda.length} data sudah ada di acuan`;
-
-            // KPI 4: Total Insentif (Publik = Total Lifetime, Admin = Data Baru)
-            const isLoggedIn = Boolean(state.currentUser);
-            const targetInsentifData = isLoggedIn && state.diffBaru.length > 0 ? state.diffBaru : state.acuanData;
-            document.getElementById('kpi-insentif-label').textContent = isLoggedIn && state.diffBaru.length > 0 ? 'Insentif Data Baru' : 'Insentif Lifetime';
-            const totalInsentif = targetInsentifData.reduce((acc, row) => acc + parseCurrencyNumber(row['Besaran Insentif']), 0);
-            document.getElementById('kpi-insentif').textContent = formatRupiah(totalInsentif);
-
-            // Button Merge State
-            const btnMerge = document.getElementById('btn-merge-master');
-            if (btnMerge) btnMerge.disabled = state.diffBaru.length === 0;
-        }
-        function renderTable() {
-            const tbody = document.getElementById('table-body');
-            const emptyState = document.getElementById('empty-state');
-            const total = state.filteredData.length;
-            const isLoggedIn = Boolean(state.currentUser);
-
-            // Masking helper untuk melindungi NIK & No HP saat diakses publik tanpa login
-            const maskSensitive = (val, keepStart = 6, keepEnd = 2) => {
-                if (!val) return '-';
-                if (isLoggedIn) return val;
-                const s = String(val);
-                if (s.length <= keepStart + keepEnd) return '********';
-                return s.slice(0, keepStart) + '******' + s.slice(-keepEnd);
-            };
-
-            if (total === 0) {
-                tbody.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                document.getElementById('pagination-info').textContent = '0 - 0 dari 0';
-                document.getElementById('pagination-controls').innerHTML = '';
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-            const totalPages = Math.ceil(total / state.pageSize);
-            if (state.currentPage > totalPages) state.currentPage = totalPages;
-
-            const startIdx = (state.currentPage - 1) * state.pageSize;
-            const endIdx = Math.min(startIdx + state.pageSize, total);
-            const pageItems = state.filteredData.slice(startIdx, endIdx);
-
-            tbody.innerHTML = pageItems.map((row, idx) => {
-                const badgeHtml = row._statusKomparasi === 'BARU'
-                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">BARU</span>`
-                    : row._statusKomparasi === 'TERDAFTAR'
-                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">ADA DI ACUAN</span>`
-                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">TERDAFTAR</span>`;
-
-                const statusBadge = (row['Status'] || '').toLowerCase() === 'aktif'
-                    ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">Aktif</span>`
-                    : `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">${escapeHtml(row['Status'] || '-')}</span>`;
-
-                const bpjsBadge = (row['BPJS Ketenagakerjaan'] || '').toLowerCase().includes('aktif') || (row['BPJS Ketenagakerjaan'] || '').toLowerCase().includes('ya')
-                    ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300">${escapeHtml(row['BPJS Ketenagakerjaan'])}</span>`
-                    : `<span class="text-slate-500 dark:text-slate-400">${escapeHtml(row['BPJS Ketenagakerjaan'] || '-')}</span>`;
-
-                const insentifFormatted = row['Besaran Insentif'] 
-                    ? formatRupiah(parseCurrencyNumber(row['Besaran Insentif']))
-                    : '-';
-
-                return `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
-                        <td class="py-2.5 px-3 sticky left-0 z-10 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800">
-                            <div class="flex items-center gap-2">
-                                <button onclick="openDetailModal(${startIdx + idx})" class="p-1.5 rounded-lg bg-slate-100 hover:bg-linmas-100 text-slate-600 hover:text-linmas-700 dark:bg-slate-800 dark:text-slate-300 transition" title="Lihat Detail 20 Kolom">
-                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                </button>
-                                ${badgeHtml}
-                            </div>
-                        </td>
-                        <td class="py-2.5 px-3 font-medium text-slate-500">${startIdx + idx + 1}</td>
-                        <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">${escapeHtml(row['Nama Lengkap'])}</td>
-                        <td class="py-2.5 px-3 font-mono text-xs text-slate-700 dark:text-slate-300">${escapeHtml(maskSensitive(row['NIK'], 6, 2))}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(maskSensitive(row['No. HP'], 4, 2))}</td>
-                        <td class="py-2.5 px-3 text-slate-500">${escapeHtml(isLoggedIn ? row['Email'] : '***@***')}</td>
-                        <td class="py-2.5 px-3 font-mono text-xs font-semibold text-linmas-700 dark:text-linmas-400">${escapeHtml(row['Nomor KTA'])}</td>
-                        <td class="py-2.5 px-3 font-medium">${escapeHtml(row['Kecamatan'])}</td>
-                        <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(row['Kelurahan'])}</td>
-                        <td class="py-2.5 px-3 max-w-xs truncate" title="${escapeHtml(row['Alamat'])}">${escapeHtml(row['Alamat'])}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Tingkat'])}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Kategori'])}</td>
-                        <td class="py-2.5 px-3">${statusBadge}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Tgl Daftar'])}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Keterangan Insentif'])}</td>
-                        <td class="py-2.5 px-3 text-right font-semibold">${insentifFormatted}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Pendidikan Terakhir'])}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Profesi Sebelumnya'])}</td>
-                        <td class="py-2.5 px-3 text-center">${escapeHtml(row['Jumlah Keluarga Serumah'])}</td>
-                        <td class="py-2.5 px-3">${escapeHtml(row['Keahlian'])}</td>
-                        <td class="py-2.5 px-3">${bpjsBadge}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            lucide.createIcons();
-
-            // Pagination info & buttons
-            document.getElementById('pagination-info').textContent = `${startIdx + 1} - ${endIdx} dari ${total.toLocaleString('id-ID')}`;
-            renderPaginationControls(totalPages);
-        }
-
-        // =========================================================================
-        // 9. DATA SIMULASI AWAL & UTILITAS COPY SCRIPT
-        // =========================================================================
-        function seedInitialPublicDemo() {
-            loadDemoData(true);
-            state.activeTab = state.currentUser ? 'baru' : 'acuan';
-        }
-
-        function loadDemoData(silent = false) {
-            const demoAcuan = [
-                {
-                    "No": "1", "Nama Lengkap": "SUDARMAN", "NIK": "1605010101800001", "No. HP": "081367112233",
-                    "Email": "sudarman.mura@gmail.com", "Nomor KTA": "KTA-1605-0001", "Kecamatan": "Tugumulyo",
-                    "Kelurahan": "Srikaton", "Alamat": "Dusun I RT 02 Desa Srikaton", "Tingkat": "Desa",
-                    "Kategori": "Komandan Regu", "Status": "Aktif", "Tgl Daftar": "2024-03-10",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "400000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Wiraswasta", "Jumlah Keluarga Serumah": "4", "Keahlian": "PBB & Ketertiban Umum",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "2", "Nama Lengkap": "BAMBANG HERMANTO", "NIK": "1605011504850002", "No. HP": "082177889900",
-                    "Email": "bambang.h@gmail.com", "Nomor KTA": "KTA-1605-0002", "Kecamatan": "Tugumulyo",
-                    "Kelurahan": "Mataram", "Alamat": "Jl. Lintas Tugumulyo Dusun III", "Tingkat": "Desa",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2024-03-12",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "350000", "Pendidikan Terakhir": "SMP",
-                    "Profesi Sebelumnya": "Petani", "Jumlah Keluarga Serumah": "5", "Keahlian": "Penanggulangan Kebakaran",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "3", "Nama Lengkap": "JOKO SUSILO", "NIK": "1605022007900003", "No. HP": "085268110022",
-                    "Email": "jokosusilo90@gmail.com", "Nomor KTA": "KTA-1605-0003", "Kecamatan": "Muara Beliti",
-                    "Kelurahan": "Pasar Muara Beliti", "Alamat": "Lingkungan II Kel. Pasar Muara Beliti", "Tingkat": "Kelurahan",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2024-05-01",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "350000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Buruh Harian", "Jumlah Keluarga Serumah": "3", "Keahlian": "Pengamanan Lingkungan",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "4", "Nama Lengkap": "RAHMAT HIDAYAT", "NIK": "1605031109870004", "No. HP": "081271234567",
-                    "Email": "rahmat.hd@gmail.com", "Nomor KTA": "KTA-1605-0004", "Kecamatan": "Megang Sakti",
-                    "Kelurahan": "Megang Sakti I", "Alamat": "Dusun IV RT 01", "Tingkat": "Kelurahan",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2024-06-18",
-                    "Keterangan Insentif": "Dana Desa", "Besaran Insentif": "300000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Pekebun Karet", "Jumlah Keluarga Serumah": "4", "Keahlian": "Pertolongan Pertama (P3K)",
-                    "BPJS Ketenagakerjaan": "Belum Terdaftar"
-                }
-            ];
-
-            const demoTerbaru = [
-                demoAcuan[0],
-                demoAcuan[2],
-                {
-                    "No": "3", "Nama Lengkap": "ANDI WIJAYA", "NIK": "1605012508950009", "No. HP": "082281990011",
-                    "Email": "andiwijaya.srikaton@gmail.com", "Nomor KTA": "KTA-1605-0105", "Kecamatan": "Tugumulyo",
-                    "Kelurahan": "Srikaton", "Alamat": "Dusun III RT 05 Desa Srikaton", "Tingkat": "Desa",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2026-10-05",
-                    "Keterangan Insentif": "Dana Desa", "Besaran Insentif": "350000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Petani", "Jumlah Keluarga Serumah": "3", "Keahlian": "Logistik & Dapur Umum",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "4", "Nama Lengkap": "DEDI KURNIAWAN", "NIK": "1605021402920012", "No. HP": "081373445566",
-                    "Email": "dedi.beliti@gmail.com", "Nomor KTA": "KTA-1605-0106", "Kecamatan": "Muara Beliti",
-                    "Kelurahan": "Tanah Periuk", "Alamat": "Dusun I Desa Tanah Periuk", "Tingkat": "Desa",
-                    "Kategori": "Satlinmas Inti", "Status": "Aktif", "Tgl Daftar": "2026-10-12",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "350000", "Pendidikan Terakhir": "D3",
-                    "Profesi Sebelumnya": "Karyawan Swasta", "Jumlah Keluarga Serumah": "4", "Keahlian": "Komunikasi Radio / HT",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "5", "Nama Lengkap": "RIKO SAPUTRA", "NIK": "1605030911960015", "No. HP": "085369887766",
-                    "Email": "rikosaputra@gmail.com", "Nomor KTA": "KTA-1605-0107", "Kecamatan": "Megang Sakti",
-                    "Kelurahan": "Jajaran Baru", "Alamat": "Dusun II RT 03 Desa Jajaran Baru", "Tingkat": "Desa",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2026-11-01",
-                    "Keterangan Insentif": "Dana Desa", "Besaran Insentif": "300000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Pekebun Sawit", "Jumlah Keluarga Serumah": "2", "Keahlian": "Evakuasi Banjir",
-                    "BPJS Ketenagakerjaan": "Belum Terdaftar"
-                },
-                {
-                    "No": "6", "Nama Lengkap": "HERMANSYAH", "NIK": "1605041706890021", "No. HP": "081274009988",
-                    "Email": "hermansyah.purwodadi@gmail.com", "Nomor KTA": "KTA-1605-0108", "Kecamatan": "Purwodadi",
-                    "Kelurahan": "Mangun Harjo", "Alamat": "Dusun IV Desa Mangun Harjo", "Tingkat": "Desa",
-                    "Kategori": "Komandan Regu", "Status": "Aktif", "Tgl Daftar": "2026-11-08",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "400000", "Pendidikan Terakhir": "S1",
-                    "Profesi Sebelumnya": "Wiraswasta", "Jumlah Keluarga Serumah": "5", "Keahlian": "Manajemen Posko & PBB",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                }
-            ];
-
-            state.acuanData = demoAcuan;
-            state.terbaruData = demoTerbaru;
-            document.getElementById('acuan-filename').textContent = `Master_Lifetime_MusiRawas (${demoAcuan.length} data)`;
-            document.getElementById('terbaru-filename').textContent = `Update_Desa_Nov2026 (${demoTerbaru.length} data)`;
-
-            saveToLocalStorage();
-            if (!silent) {
-                switchTab(state.currentUser ? 'baru' : 'acuan');
-                runComparison();
-                showToast('Data Simulasi Kabupaten Musi Rawas dimuat!', 'success');
-            }
-        }
-
-        function copyGasScript() {
-            const text = document.getElementById('gas-code-snippet').textContent;
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast('Kode Code.gs berhasil disalin ke clipboard!', 'success');
-        }
-            ];
-
-            // Data Terbaru Desa: 2 orang lama (sudah ada di acuan), 4 orang BARU (belum ada di acuan)
-            const demoTerbaru = [
-                demoAcuan[0], // Sudah ada di acuan (Sudarman)
-                demoAcuan[2], // Sudah ada di acuan (Joko Susilo)
-                {
-                    "No": "3", "Nama Lengkap": "ANDI WIJAYA", "NIK": "1605012508950009", "No. HP": "082281990011",
-                    "Email": "andiwijaya.srikaton@gmail.com", "Nomor KTA": "KTA-1605-0105", "Kecamatan": "Tugumulyo",
-                    "Kelurahan": "Srikaton", "Alamat": "Dusun III RT 05 Desa Srikaton", "Tingkat": "Desa",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2026-10-05",
-                    "Keterangan Insentif": "Dana Desa", "Besaran Insentif": "350000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Petani", "Jumlah Keluarga Serumah": "3", "Keahlian": "Logistik & Dapur Umum",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "4", "Nama Lengkap": "DEDI KURNIAWAN", "NIK": "1605021402920012", "No. HP": "081373445566",
-                    "Email": "dedi.beliti@gmail.com", "Nomor KTA": "KTA-1605-0106", "Kecamatan": "Muara Beliti",
-                    "Kelurahan": "Tanah Periuk", "Alamat": "Dusun I Desa Tanah Periuk", "Tingkat": "Desa",
-                    "Kategori": "Satlinmas Inti", "Status": "Aktif", "Tgl Daftar": "2026-10-12",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "350000", "Pendidikan Terakhir": "D3",
-                    "Profesi Sebelumnya": "Karyawan Swasta", "Jumlah Keluarga Serumah": "4", "Keahlian": "Komunikasi Radio / HT",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                },
-                {
-                    "No": "5", "Nama Lengkap": "RIKO SAPUTRA", "NIK": "1605030911960015", "No. HP": "085369887766",
-                    "Email": "rikosaputra@gmail.com", "Nomor KTA": "KTA-1605-0107", "Kecamatan": "Megang Sakti",
-                    "Kelurahan": "Jajaran Baru", "Alamat": "Dusun II RT 03 Desa Jajaran Baru", "Tingkat": "Desa",
-                    "Kategori": "Anggota Satlinmas", "Status": "Aktif", "Tgl Daftar": "2026-11-01",
-                    "Keterangan Insentif": "Dana Desa", "Besaran Insentif": "300000", "Pendidikan Terakhir": "SMA",
-                    "Profesi Sebelumnya": "Pekebun Sawit", "Jumlah Keluarga Serumah": "2", "Keahlian": "Evakuasi Banjir",
-                    "BPJS Ketenagakerjaan": "Belum Terdaftar"
-                },
-                {
-                    "No": "6", "Nama Lengkap": "HERMANSYAH", "NIK": "1605041706890021", "No. HP": "081274009988",
-                    "Email": "hermansyah.purwodadi@gmail.com", "Nomor KTA": "KTA-1605-0108", "Kecamatan": "Purwodadi",
-                    "Kelurahan": "Mangun Harjo", "Alamat": "Dusun IV Desa Mangun Harjo", "Tingkat": "Desa",
-                    "Kategori": "Komandan Regu", "Status": "Aktif", "Tgl Daftar": "2026-11-08",
-                    "Keterangan Insentif": "APBD Kabupaten", "Besaran Insentif": "400000", "Pendidikan Terakhir": "S1",
-                    "Profesi Sebelumnya": "Wiraswasta", "Jumlah Keluarga Serumah": "5", "Keahlian": "Manajemen Posko & PBB",
-                    "BPJS Ketenagakerjaan": "Aktif"
-                }
-            ];
-
-            state.acuanData = demoAcuan;
-            state.terbaruData = demoTerbaru;
-            document.getElementById('acuan-filename').textContent = `Simulasi_Master_MusiRawas.xlsx (${demoAcuan.length} data)`;
-            document.getElementById('terbaru-filename').textContent = `Simulasi_Update_Desa_Nov2026.xlsx (${demoTerbaru.length} data)`;
-
-            saveToLocalStorage();
-            switchTab('baru');
-            runComparison();
-            showToast('Data Simulasi Kabupaten Musi Rawas dimuat! Ditemukan 4 anggota baru yang belum ada di Data Acuan.', 'success');
-        }
-
-        // =========================================================================
-        // 10. MODALS & UI UTILITIES
-        // =========================================================================
-        function openDetailModal(filteredIndex) {
-            const row = state.filteredData[filteredIndex];
-            if (!row) return;
-
-            document.getElementById('modal-nama').textContent = row['Nama Lengkap'] || 'Tanpa Nama';
-            document.getElementById('modal-sub').textContent = `NIK: ${row['NIK'] || '-'}  •  No. KTA: ${row['Nomor KTA'] || '-'}`;
-
-            const content = document.getElementById('modal-detail-content');
-            content.innerHTML = OFFICIAL_HEADERS.map(header => {
-                let val = row[header] || '-';
-                if (header === 'Besaran Insentif' && row[header]) {
-                    val = formatRupiah(parseCurrencyNumber(row[header]));
-                }
-                return `
-                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">${header}</div>
-                        <div class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5 break-words">${escapeHtml(val)}</div>
-                    </div>
-                `;
-            }).join('');
-
-            toggleModal('detail-modal', true);
-        }
-
-        function toggleModal(modalId, show) {
-            const el = document.getElementById(modalId);
-            if (show) {
-                el.classList.remove('hidden');
-                el.classList.add('flex');
-                lucide.createIcons();
-            } else {
-                el.classList.add('hidden');
-                el.classList.remove('flex');
-            }
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const colors = {
-                success: 'bg-emerald-900 text-white border-emerald-700',
-                error: 'bg-rose-900 text-white border-rose-700',
-                info: 'bg-slate-900 text-white border-slate-700'
-            };
-
-            toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
-            toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
-            
-            container.appendChild(toast);
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-    </script>
+    // Inisialisasi Awal
+    handleRouting();
+    fetchFromSpreadsheet();
+  </script>
 </body>
 </html>
